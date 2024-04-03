@@ -1,4 +1,4 @@
-package com.example.eatsplorer
+package com.example.eatsplorer.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -14,10 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldColors
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,10 +31,13 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import com.example.eatsplorer.DestinationScreen
+import com.example.eatsplorer.R
 
 
 @Composable
-fun LoginScreen() {
+fun LoginScreen(navController: NavController) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -60,7 +60,7 @@ fun LoginScreen() {
             )
             LoginForm()
             Spacer(modifier = Modifier.height(16.dp))
-            LoginButton()
+            LoginButton(navController)
             Spacer(modifier = Modifier.height(16.dp))
             Row(
                 verticalAlignment = Alignment.CenterVertically
@@ -102,9 +102,9 @@ fun LoginForm() {
 }
 
 @Composable
-fun LoginButton() {
+fun LoginButton(navController: NavController) {
     Button(
-        onClick = { /* Handle login */ },
+        onClick = { navController.navigate(DestinationScreen.Inicio.route) },
         modifier = Modifier.fillMaxWidth(),
         colors = buttonColors(
             Color.Black // Cambia aquí el color de fondo del botón

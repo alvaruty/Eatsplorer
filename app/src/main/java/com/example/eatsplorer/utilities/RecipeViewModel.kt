@@ -28,7 +28,7 @@ class RecipeViewModel : ViewModel() {
         isLoading = true
         viewModelScope.launch {
             try {
-                val response = edamamApi.getRecipesByIngredient(searchQuery, appId, appKey)
+                val response = edamamApi.getRecipesByIngredient(searchQuery, appId, appKey, "es")
                 if (response.hits.isNotEmpty()) {
                     recipes = response.hits.map { it.recipe }
                     error = null

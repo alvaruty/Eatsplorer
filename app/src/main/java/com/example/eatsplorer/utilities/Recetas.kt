@@ -26,8 +26,8 @@ data class Receta(
     val uri: String,
     val label: String,
     val image: String?,  // Nueva propiedad para la imagen
-    val porciones: Int,  // Nueva propiedad para las porciones
-    val ingredientes: List<Ingrediente>?
+    val yield: Int,  // Nueva propiedad para las porciones
+    val ingredientLines: List<String>?
 )
 
 data class Ingrediente(

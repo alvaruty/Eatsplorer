@@ -97,10 +97,10 @@ fun RecipeItem(recipe: Receta) {
             Text(text = recipe.label)
             Spacer(modifier = Modifier.height(8.dp))
             Text(text = "Ingredientes:")
-            recipe.ingredientes?.let {
+            recipe.ingredientLines?.let {
                 if (it.isNotEmpty()) {
                     it.forEach { ingredient ->
-                        Text(text = "- ${ingredient.text}")
+                        Text(text = "- ${ingredient.toString()}")
                     }
                 } else {
                     Text(text = "No se encontraron ingredientes.")
@@ -111,3 +111,5 @@ fun RecipeItem(recipe: Receta) {
         }
     }
 }
+
+

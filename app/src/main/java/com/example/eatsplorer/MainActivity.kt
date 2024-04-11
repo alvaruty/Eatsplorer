@@ -15,6 +15,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import com.example.eatsplorer.screens.LoginScreen
 import com.example.eatsplorer.screens.MainScreen
+import com.example.eatsplorer.screens.MyScreen
 import com.example.eatsplorer.ui.theme.EatsplorerTheme
 import com.example.eatsplorer.utilities.RecipeViewModel
 
@@ -33,7 +34,10 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    AppNavigation()
+                    //AppNavigation()
+                    val recipeViewModel = remember { RecipeViewModel() } //borrar
+
+                    MyScreen(recipeViewModel)
 
                 }
 

@@ -104,7 +104,7 @@ fun LoginForm() {
 @Composable
 fun LoginButton(navController: NavController) {
     Button(
-        onClick = { navController.navigate(DestinationScreen.Inicio.route) },
+        onClick = { navController.navigate(DestinationScreen.MainScreen.route) },
         modifier = Modifier.fillMaxWidth(),
         colors = buttonColors(
             Color.Black // Cambia aquí el color de fondo del botón

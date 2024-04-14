@@ -5,38 +5,55 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import com.example.eatsplorer.DestinationScreen
 import com.example.eatsplorer.utilities.RecipeViewModel
 import com.example.eatsplorer.R
+import com.example.eatsplorer.utilities.Receta
+import coil.compose.rememberAsyncImagePainter
+import coil.compose.rememberImagePainter
 
 
 @Composable
-fun MyScreen(viewModel: RecipeViewModel) {
+fun MyScreen(viewModel: RecipeViewModel, navController: NavController) {
     val isLoading = viewModel.isLoading
     val recipes = viewModel.recipes
     val error = viewModel.error
+
+    // Llamamos a getRecommendedRecipes() al cargar la pantalla
+    LaunchedEffect(Unit) {
+        viewModel.getRecommendedRecipes()
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -73,20 +90,39 @@ fun MyScreen(viewModel: RecipeViewModel) {
                 fontSize = 27.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black
-            )
+            ),
+            modifier = Modifier.padding(bottom = 8.dp)
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Lista de recomendados
-        RecommendedList()
+        if (isLoading) {
+            // Muestra un indicador de carga
+            Text(text = "Cargando recetas...", modifier = Modifier.fillMaxWidth().padding(16.dp))
+        } else if (error != null) {
+            // Muestra un mensaje de error
+            Text(text = error, modifier = Modifier.fillMaxWidth().padding(16.dp))
+        } else if (recipes.isNotEmpty()) {
+            // Lista de recomendados
+            LazyRow(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // Filtrar las recetas para omitir la primera
+                val filteredRecipes = recipes.drop(1)
+                items(filteredRecipes) { recipe ->
+                    RecipeItemRecomendado(recipe)
+                }
+            }
+        } else {
+            // Mensaje si no hay recetas
+            Text(text = "No se encontraron recetas recomendadas.", modifier = Modifier.fillMaxWidth().padding(16.dp))
+        }
 
         Spacer(modifier = Modifier.weight(1f))
 
         // Menú inferior
-        BottomMenu()
+        BottomMenu(navController, selectedIcon = Icons.Default.Home)
     }
 }
+
 
 @Composable
 fun SearchBar(viewModel: RecipeViewModel) {
@@ -107,10 +143,11 @@ fun SearchBar(viewModel: RecipeViewModel) {
 fun Categories() {
     val categories = listOf(
         CategoryItem("Pollo", R.drawable.pollo),
-        CategoryItem("Arroz", R.drawable.pollo),
-        CategoryItem("Huevo", R.drawable.pollo),
-        CategoryItem("Carne", R.drawable.pollo),
-        CategoryItem("Pescado", R.drawable.pollo)
+        CategoryItem("Arroz", R.drawable.arroz),
+        CategoryItem("Huevo", R.drawable.huevo),
+        CategoryItem("Carne", R.drawable.carne),
+        CategoryItem("Pescado", R.drawable.pescado),
+        CategoryItem("Pasta", R.drawable.pasta)
     )
 
     LazyRow(modifier = Modifier.fillMaxWidth()) {
@@ -164,16 +201,8 @@ fun CategoryItem(category: CategoryItem) {
 
 data class CategoryItem(val name: String, val imageRes: Int)
 
-
-
 @Composable
-fun RecommendedList() {
-    // Aquí iría la implementación de tu lista de elementos recomendados
-    // Puedes usar LazyColumn o LazyRow según tu diseño
-}
-
-@Composable
-fun BottomMenu() {
+fun BottomMenu(navController: NavController, selectedIcon: ImageVector) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -181,10 +210,86 @@ fun BottomMenu() {
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(Icons.Default.Home, contentDescription = "Inicio", modifier = Modifier.size(36.dp))
-        Icon(Icons.Default.Favorite, contentDescription = "Favoritos", modifier = Modifier.size(36.dp))
-        Icon(Icons.Default.AccountCircle, contentDescription = "Usuario", modifier = Modifier.size(36.dp))
+        Icon(
+            Icons.Default.Home,
+            contentDescription = "Inicio",
+            modifier = Modifier
+                .size(36.dp)
+                .clickable {
+                    navController.navigate(DestinationScreen.MainScreen.route) //
+                },
+            tint = if (selectedIcon == Icons.Default.Home) Color(android.graphics.Color.parseColor("#ed6b5a")) else Color.Black
+        )
+
+        Icon(
+            Icons.Default.Favorite,
+            contentDescription = "Favoritos",
+            modifier = Modifier
+                .size(36.dp)
+                .clickable {
+                    navController.navigate(DestinationScreen.Favorites.route)
+                },
+            tint = if (selectedIcon == Icons.Default.Favorite) Color(android.graphics.Color.parseColor("#ed6b5a")) else Color.Black
+        )
+
+        Icon(
+            Icons.Default.AccountCircle,
+            contentDescription = "Usuario",
+            modifier = Modifier
+                .size(36.dp)
+                .clickable {
+                    navController.navigate(DestinationScreen.Account.route)
+                },
+            tint = if (selectedIcon == Icons.Default.AccountCircle) Color(android.graphics.Color.parseColor("#ed6b5a")) else Color.Black
+        )
     }
 }
 
+@Composable
+fun RecipeItemRecomendado(recipe: Receta) {
+    Card(
+        modifier = Modifier
+            .width(365.dp)
+            .height(380.dp)
+    ) {
+        Column {
+            // Imagen de la receta si está disponible
+            if (!recipe.image.isNullOrEmpty()) {
+                Image(
+                    painter = rememberAsyncImagePainter(recipe.image),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
+                    contentScale = ContentScale.Crop
+                )
+            }
 
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = recipe.label,
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp,
+                modifier = Modifier.padding(8.dp)
+            )
+
+            Text(
+                text = "Porciones: ${recipe.yield}",
+                modifier = Modifier.padding(8.dp)
+            )
+
+            Text(
+                text = "Ingredientes:",
+                modifier = Modifier.padding(8.dp)
+            )
+
+            recipe.ingredientLines?.forEach { ingredient ->
+                Text(
+                    text = "- $ingredient",
+                    modifier = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 8.dp)
+                )
+            }
+        }
+    }
+}

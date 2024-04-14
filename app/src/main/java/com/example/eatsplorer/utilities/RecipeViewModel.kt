@@ -1,5 +1,6 @@
 package com.example.eatsplorer.utilities
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -42,4 +43,28 @@ class RecipeViewModel : ViewModel() {
             }
         }
     }
+
+    fun getRecommendedRecipes() {
+        isLoading = true
+        viewModelScope.launch {
+            try {
+                val response = edamamApi.searchRecipes(appId, appKey, "recommended", "es") // Utilizamos un término "recommended" ficticio para obtener recetas recomendadas
+                Log.d("API_RESPONSE", response.toString()) // Imprimir la respuesta de la API
+                if (response.hits.isNotEmpty()) {
+                    recipes = response.hits.map { it.recipe }
+                    error = null
+                } else {
+                    error = "No se encontraron recetas recomendadas"
+                }
+            } catch (e: Exception) {
+                error = "Error al buscar recetas recomendadas: ${e.message}"
+                Log.e("API_ERROR", e.message ?: "Unknown error") // Imprimir el error
+            } finally {
+                isLoading = false
+            }
+        }
+    }
+
+
 }
+

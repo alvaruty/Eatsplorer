@@ -12,6 +12,14 @@ interface EdamamApi {
         @Query("app_key") appKey: String,
         @Query("lang") language: String = "es"
     ): RespuestaAPI
+
+    @GET("search")
+    suspend fun searchRecipes(
+        @Query("app_id") appId: String,
+        @Query("app_key") appKey: String,
+        @Query("q") query: String,
+        @Query("lang") language: String = "es"
+    ): RespuestaAPI
 }
 
 data class RespuestaAPI(

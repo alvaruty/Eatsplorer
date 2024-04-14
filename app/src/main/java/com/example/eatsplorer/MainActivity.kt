@@ -10,19 +10,24 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.eatsplorer.screens.AccountScreen
 import com.example.eatsplorer.screens.LoginScreen
 import com.example.eatsplorer.screens.MainScreen
+import com.example.eatsplorer.screens.FavoritesScreen // Importa la nueva pantalla de favoritos
 import com.example.eatsplorer.screens.MyScreen
 import com.example.eatsplorer.ui.theme.EatsplorerTheme
 import com.example.eatsplorer.utilities.RecipeViewModel
 
 sealed class DestinationScreen(var route: String){
     object Login : DestinationScreen("Login")
-    object Inicio : DestinationScreen("Main")
+    object MainScreen : DestinationScreen("Main")
+    object Favorites : DestinationScreen("Favorites") // Nueva pantalla de favoritos
+    object Account : DestinationScreen("Account")
 }
+
 class MainActivity : ComponentActivity() {
     @SuppressLint("CoroutineCreationDuringComposition")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,29 +39,33 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    //AppNavigation()
-                    val recipeViewModel = remember { RecipeViewModel() } //borrar
+                    AppNavigation()
+                    //val recipeViewModel = remember { RecipeViewModel() } //borrar
 
-                    MyScreen(recipeViewModel)
-
+                    //MainScreen(recipeViewModel)
                 }
-
             }
-
         }
     }
+
     @Composable
     fun AppNavigation(){
         val navController = rememberNavController()
         val recipeViewModel = remember { RecipeViewModel() }
+
         NavHost(navController = navController, startDestination = DestinationScreen.Login.route){
             composable(DestinationScreen.Login.route){
                 LoginScreen(navController)
             }
-            composable(DestinationScreen.Inicio.route){
-                MainScreen(viewModel = recipeViewModel)
+            composable(DestinationScreen.MainScreen.route){
+                MyScreen(viewModel = recipeViewModel, navController)
+            }
+            composable(DestinationScreen.Favorites.route){
+                FavoritesScreen(navController)
+            }
+            composable(DestinationScreen.Account.route){
+                AccountScreen(navController)
             }
         }
     }
 }
-

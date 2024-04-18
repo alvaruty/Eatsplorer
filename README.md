@@ -1,4 +1,4 @@
-Aplicion que te permite buscar recetas de comida buscando por alimentos.
+Aplicación que te permite buscar recetas de comida por alimentos.
 
 Pantalla de LOGIN:
 

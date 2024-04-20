@@ -15,11 +15,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.eatsplorer.screens.AccountScreen
 import com.example.eatsplorer.screens.LoginScreen
-import com.example.eatsplorer.screens.MainScreen
 import com.example.eatsplorer.screens.FavoritesScreen // Importa la nueva pantalla de favoritos
 import com.example.eatsplorer.screens.MyScreen
 import com.example.eatsplorer.ui.theme.EatsplorerTheme
-import com.example.eatsplorer.utilities.RecipeViewModel
+import com.example.eatsplorer.utilities.RecipeViewModelEdaman
+import com.example.eatsplorer.utilities.RecipeViewModelNutritionix
 
 sealed class DestinationScreen(var route: String){
     object Login : DestinationScreen("Login")
@@ -51,14 +51,15 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun AppNavigation(){
         val navController = rememberNavController()
-        val recipeViewModel = remember { RecipeViewModel() }
+        val recipeViewModel = remember { RecipeViewModelEdaman() }
+        val recipeViewModelImagnes = remember { RecipeViewModelNutritionix() }
 
         NavHost(navController = navController, startDestination = DestinationScreen.Login.route){
             composable(DestinationScreen.Login.route){
                 LoginScreen(navController)
             }
             composable(DestinationScreen.MainScreen.route){
-                MyScreen(viewModel = recipeViewModel, navController)
+                MyScreen(viewModel = recipeViewModel, navController, recipeViewModelImagnes)
             }
             composable(DestinationScreen.Favorites.route){
                 FavoritesScreen(navController)

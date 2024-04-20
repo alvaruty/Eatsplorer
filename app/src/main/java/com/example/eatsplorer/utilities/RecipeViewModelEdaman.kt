@@ -10,7 +10,7 @@ import kotlinx.coroutines.launch
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-class RecipeViewModel : ViewModel() {
+class RecipeViewModelEdaman : ViewModel() {
     var searchQuery by mutableStateOf("")
     var recipes by mutableStateOf<List<Receta>>(emptyList())
     var isLoading by mutableStateOf(false)

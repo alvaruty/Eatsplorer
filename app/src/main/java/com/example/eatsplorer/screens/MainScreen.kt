@@ -5,7 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -13,6 +12,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -36,15 +36,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.eatsplorer.DestinationScreen
-import com.example.eatsplorer.utilities.RecipeViewModel
+import com.example.eatsplorer.utilities.RecipeViewModelEdaman
 import com.example.eatsplorer.R
 import com.example.eatsplorer.utilities.Receta
 import coil.compose.rememberAsyncImagePainter
-import coil.compose.rememberImagePainter
+import com.example.eatsplorer.utilities.RecipeViewModelNutritionix
 
 
 @Composable
-fun MyScreen(viewModel: RecipeViewModel, navController: NavController) {
+fun MyScreen(viewModel: RecipeViewModelEdaman, navController: NavController, viewModelImagen: RecipeViewModelNutritionix) {
     val isLoading = viewModel.isLoading
     val recipes = viewModel.recipes
     val error = viewModel.error
@@ -108,7 +108,7 @@ fun MyScreen(viewModel: RecipeViewModel, navController: NavController) {
                 // Filtrar las recetas para omitir la primera
                 val filteredRecipes = recipes.drop(1)
                 items(filteredRecipes) { recipe ->
-                    RecipeItemRecomendado(recipe)
+                    RecipeItemRecomendado(recipe,viewModel,viewModelImagen)
                 }
             }
         } else {
@@ -125,7 +125,7 @@ fun MyScreen(viewModel: RecipeViewModel, navController: NavController) {
 
 
 @Composable
-fun SearchBar(viewModel: RecipeViewModel) {
+fun SearchBar(viewModel: RecipeViewModelEdaman) {
     OutlinedTextField(
         value = viewModel.searchQuery,
         onValueChange = { viewModel.searchQuery = it },
@@ -246,50 +246,93 @@ fun BottomMenu(navController: NavController, selectedIcon: ImageVector) {
 }
 
 @Composable
-fun RecipeItemRecomendado(recipe: Receta) {
+fun RecipeItemRecomendado(recipe: Receta, viewModel: RecipeViewModelEdaman, viewModelImagen: RecipeViewModelNutritionix) {
     Card(
         modifier = Modifier
             .width(365.dp)
-            .height(380.dp)
+            .height(380.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xE7E7E7),
+        )
     ) {
-        Column {
+        Row(
+            modifier = Modifier.padding(16.dp)
+        ) {
             // Imagen de la receta si está disponible
             if (!recipe.image.isNullOrEmpty()) {
                 Image(
                     painter = rememberAsyncImagePainter(recipe.image),
                     contentDescription = null,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp),
+                        .size(120.dp)
+                        .clip(RoundedCornerShape(12.dp)),
                     contentScale = ContentScale.Crop
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.width(16.dp))
 
-            Text(
-                text = recipe.label,
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
-                modifier = Modifier.padding(8.dp)
-            )
-
-            Text(
-                text = "Porciones: ${recipe.yield}",
-                modifier = Modifier.padding(8.dp)
-            )
-
-            Text(
-                text = "Ingredientes:",
-                modifier = Modifier.padding(8.dp)
-            )
-
-            recipe.ingredientLines?.forEach { ingredient ->
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
                 Text(
-                    text = "- $ingredient",
-                    modifier = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 8.dp)
+                    text = recipe.label,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    modifier = Modifier.padding(8.dp)
                 )
+
+                Text(
+                    text = "Para ${recipe.yield} personas",
+                    modifier = Modifier.padding(8.dp)
+                )
+
+                Text(
+                    text = "Ingredientes:",
+                    modifier = Modifier.padding(8.dp)
+                )
+
+                recipe.ingredientLines?.forEach { ingredient ->
+                    IngredientItem(ingredient = ingredient, viewModel = viewModelImagen)
+                }
             }
         }
     }
 }
+
+
+@Composable
+fun IngredientItem(ingredient: String, viewModel: RecipeViewModelNutritionix) {
+    var imageUrl by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(Unit) {
+        imageUrl = viewModel.getIngredientImage(ingredient)
+    }
+
+    Box(
+        modifier = Modifier
+            .padding(start = 8.dp, end = 8.dp, bottom = 8.dp)
+            .size(40.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(color = Color.LightGray)
+    ) {
+        if (imageUrl != null) {
+            Image(
+                painter = rememberAsyncImagePainter(imageUrl!!),
+                contentDescription = ingredient,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            Text(
+                text = ingredient,
+                modifier = Modifier.align(Alignment.Center),
+                fontSize = 12.sp
+            )
+        }
+    }
+}
+
+
+

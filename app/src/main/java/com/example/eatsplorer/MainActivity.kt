@@ -19,7 +19,7 @@ import com.example.eatsplorer.screens.FavoritesScreen // Importa la nueva pantal
 import com.example.eatsplorer.screens.MyScreen
 import com.example.eatsplorer.ui.theme.EatsplorerTheme
 import com.example.eatsplorer.utilities.RecipeViewModelEdaman
-import com.example.eatsplorer.utilities.RecipeViewModelNutritionix
+import com.example.eatsplorer.utilities.RecipeViewModelGoogleCustomSearch
 
 sealed class DestinationScreen(var route: String){
     object Login : DestinationScreen("Login")
@@ -52,7 +52,7 @@ class MainActivity : ComponentActivity() {
     fun AppNavigation(){
         val navController = rememberNavController()
         val recipeViewModel = remember { RecipeViewModelEdaman() }
-        val recipeViewModelImagnes = remember { RecipeViewModelNutritionix() }
+        val recipeViewModelImagnes = remember { RecipeViewModelGoogleCustomSearch() }
 
         NavHost(navController = navController, startDestination = DestinationScreen.Login.route){
             composable(DestinationScreen.Login.route){

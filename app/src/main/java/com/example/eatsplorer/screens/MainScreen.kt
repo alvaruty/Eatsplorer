@@ -40,11 +40,11 @@ import com.example.eatsplorer.utilities.RecipeViewModelEdaman
 import com.example.eatsplorer.R
 import com.example.eatsplorer.utilities.Receta
 import coil.compose.rememberAsyncImagePainter
-import com.example.eatsplorer.utilities.RecipeViewModelNutritionix
+import com.example.eatsplorer.utilities.RecipeViewModelGoogleCustomSearch
 
 
 @Composable
-fun MyScreen(viewModel: RecipeViewModelEdaman, navController: NavController, viewModelImagen: RecipeViewModelNutritionix) {
+fun MyScreen(viewModel: RecipeViewModelEdaman, navController: NavController, viewModelImagen: RecipeViewModelGoogleCustomSearch) {
     val isLoading = viewModel.isLoading
     val recipes = viewModel.recipes
     val error = viewModel.error
@@ -96,10 +96,14 @@ fun MyScreen(viewModel: RecipeViewModelEdaman, navController: NavController, vie
 
         if (isLoading) {
             // Muestra un indicador de carga
-            Text(text = "Cargando recetas...", modifier = Modifier.fillMaxWidth().padding(16.dp))
+            Text(text = "Cargando recetas...", modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp))
         } else if (error != null) {
             // Muestra un mensaje de error
-            Text(text = error, modifier = Modifier.fillMaxWidth().padding(16.dp))
+            Text(text = error, modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp))
         } else if (recipes.isNotEmpty()) {
             // Lista de recomendados
             LazyRow(
@@ -113,7 +117,9 @@ fun MyScreen(viewModel: RecipeViewModelEdaman, navController: NavController, vie
             }
         } else {
             // Mensaje si no hay recetas
-            Text(text = "No se encontraron recetas recomendadas.", modifier = Modifier.fillMaxWidth().padding(16.dp))
+            Text(text = "No se encontraron recetas recomendadas.", modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp))
         }
 
         Spacer(modifier = Modifier.weight(1f))
@@ -246,73 +252,96 @@ fun BottomMenu(navController: NavController, selectedIcon: ImageVector) {
 }
 
 @Composable
-fun RecipeItemRecomendado(recipe: Receta, viewModel: RecipeViewModelEdaman, viewModelImagen: RecipeViewModelNutritionix) {
+fun RecipeItemRecomendado(recipe: Receta, viewModel: RecipeViewModelEdaman, viewModelImagen: RecipeViewModelGoogleCustomSearch) {
     Card(
         modifier = Modifier
             .width(365.dp)
-            .height(380.dp),
+            .height(380.dp)
+            .padding(20.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xE7E7E7),
-        )
+            containerColor = Color(android.graphics.Color.parseColor("#EAEAEA")),
+        ),
     ) {
-        Row(
+        Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            // Imagen de la receta si está disponible
-            if (!recipe.image.isNullOrEmpty()) {
-                Image(
-                    painter = rememberAsyncImagePainter(recipe.image),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(120.dp)
-                        .clip(RoundedCornerShape(12.dp)),
-                    contentScale = ContentScale.Crop
-                )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 40.dp)
+            ) {
+                // Imagen de la receta si está disponible
+                if (!recipe.image.isNullOrEmpty()) {
+                    Image(
+                        painter = rememberAsyncImagePainter(recipe.image),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(120.dp)
+                            .clip(RoundedCornerShape(12.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = recipe.label,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        modifier = Modifier.padding(8.dp)
+                    )
+
+                    Text(
+                        text = "Para ${recipe.yield} personas",
+                        modifier = Modifier.padding(8.dp)
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Column(
-                modifier = Modifier.weight(1f)
+            Row (
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp)
             ) {
-                Text(
-                    text = recipe.label,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    modifier = Modifier.padding(8.dp)
-                )
-
-                Text(
-                    text = "Para ${recipe.yield} personas",
-                    modifier = Modifier.padding(8.dp)
-                )
-
                 Text(
                     text = "Ingredientes:",
                     modifier = Modifier.padding(8.dp)
                 )
-
-                recipe.ingredientLines?.forEach { ingredient ->
-                    IngredientItem(ingredient = ingredient, viewModel = viewModelImagen)
+            }
+            Row (
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp)
+            ) {
+                // Mostrar solo los primeros 5 ingredientes
+                val limitedIngredients = recipe.ingredientLines?.take(5) ?: emptyList()
+                LazyRow(
+                    modifier = Modifier.padding(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(limitedIngredients) { ingredient ->
+                        IngredientItem(ingredient = ingredient, viewModelImagen = viewModelImagen)
+                    }
                 }
             }
         }
     }
 }
 
-
 @Composable
-fun IngredientItem(ingredient: String, viewModel: RecipeViewModelNutritionix) {
+fun IngredientItem(ingredient: String, viewModelImagen: RecipeViewModelGoogleCustomSearch) {
     var imageUrl by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
-        imageUrl = viewModel.getIngredientImage(ingredient)
+        imageUrl = viewModelImagen.getIngredientImage(ingredient)
     }
 
     Box(
         modifier = Modifier
-            .padding(start = 8.dp, end = 8.dp, bottom = 8.dp)
             .size(40.dp)
             .clip(RoundedCornerShape(8.dp))
             .background(color = Color.LightGray)
@@ -333,6 +362,4 @@ fun IngredientItem(ingredient: String, viewModel: RecipeViewModelNutritionix) {
         }
     }
 }
-
-
 

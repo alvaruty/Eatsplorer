@@ -1,7 +1,6 @@
 package com.example.eatsplorer.screens
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -13,13 +12,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults.buttonColors
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,17 +21,14 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.eatsplorer.DestinationScreen
 import com.example.eatsplorer.R
 
-
 @Composable
-fun LoginScreen(navController: NavController) {
+fun RegisterScreen(navController: NavController) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -50,7 +41,7 @@ fun LoginScreen(navController: NavController) {
                 .align(Alignment.TopCenter)
         ) {
             Text(
-                text = "Iniciar sesión",
+                text = "Registrarse",
                 style = TextStyle(
                     fontSize = 27.sp,
                     fontWeight = FontWeight.Bold,
@@ -58,24 +49,23 @@ fun LoginScreen(navController: NavController) {
                 ),
                 modifier = Modifier.padding(bottom = 13.dp)
             )
-            LoginForm()
+            RegisterForm()
             Spacer(modifier = Modifier.height(16.dp))
-            LoginButton(navController)
-            Spacer(modifier = Modifier.height(16.dp))
+            RegisterButton(navController)
+            //Spacer(modifier = Modifier.height(16.dp))
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "¿No tienes cuenta? ",
+                    text = "¿Ya tienes una cuenta? ",
                     style = TextStyle(fontSize = 14.sp, color = Color.Black),
                 )
                 ClickableText(
-                    text = "Crear nueva cuenta",
-                    onClick = { navController.navigate(DestinationScreen.SignIn.route) },
+                    text = "Iniciar sesión",
+                    onClick = { navController.navigate(DestinationScreen.Login.route) },
                     modifier = Modifier.padding(bottom = 16.dp),
                 )
             }
-
         }
         Image(
             painter = painterResource(id = R.drawable.cocinero),
@@ -89,12 +79,13 @@ fun LoginScreen(navController: NavController) {
     }
 }
 
-
 @Composable
-fun LoginForm() {
+fun RegisterForm() {
     Column(
         modifier = Modifier.padding(vertical = 16.dp)
     ) {
+        TextFieldComponent(text = "Nombre")
+        Spacer(modifier = Modifier.height(16.dp))
         TextFieldComponent(text = "Correo electrónico")
         Spacer(modifier = Modifier.height(16.dp))
         TextFieldComponent(text = "Contraseña")
@@ -102,9 +93,9 @@ fun LoginForm() {
 }
 
 @Composable
-fun LoginButton(navController: NavController) {
+fun RegisterButton(navController: NavController) {
     Button(
-        onClick = { navController.navigate(DestinationScreen.MainScreen.route) },
+        onClick = { navController.navigate(DestinationScreen.Login.route) },
         modifier = Modifier.fillMaxWidth(),
         colors = buttonColors(
             Color.Black // Cambia aquí el color de fondo del botón
@@ -112,7 +103,7 @@ fun LoginButton(navController: NavController) {
         contentPadding = PaddingValues(vertical = 16.dp), // Ajusta el espacio vertical aquí
         content = {
             Text(
-                text = "Iniciar sesión",
+                text = "Registrarse",
                 style = TextStyle(
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
@@ -120,45 +111,5 @@ fun LoginButton(navController: NavController) {
                 )
             )
         }
-    )
-}
-
-@Composable
-fun TextFieldComponent(text: String) {
-    var textFieldValue by remember { mutableStateOf("") }
-    OutlinedTextField(
-        value = textFieldValue,
-        onValueChange = { textFieldValue = it },
-        label = {
-            Text(
-                text = text,
-                style = TextStyle(
-                    fontSize = 14.sp,
-                )
-            )
-        },
-        textStyle = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Bold),
-        visualTransformation = if (text == "Contraseña") PasswordVisualTransformation() else VisualTransformation.None,
-        modifier = Modifier.fillMaxWidth()
-    )
-}
-
-
-@Composable
-fun ClickableText(
-    text: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Text(
-        text = text,
-        style = TextStyle(
-            fontSize = 14.sp,
-            color = Color(android.graphics.Color.parseColor("#ed6b5a")),
-            fontWeight = FontWeight.Bold
-        ),
-        modifier = modifier
-            .clickable(onClick = onClick)
-            .padding(top = 16.dp),
     )
 }

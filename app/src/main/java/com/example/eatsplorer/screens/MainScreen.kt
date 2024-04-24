@@ -40,11 +40,11 @@ import com.example.eatsplorer.utilities.RecipeViewModelEdaman
 import com.example.eatsplorer.R
 import com.example.eatsplorer.utilities.Receta
 import coil.compose.rememberAsyncImagePainter
-import com.example.eatsplorer.utilities.RecipeViewModelGoogleCustomSearch
+import com.example.eatsplorer.utilities.RecipeViewModelFirebase
 
 
 @Composable
-fun MyScreen(viewModel: RecipeViewModelEdaman, navController: NavController, viewModelImagen: RecipeViewModelGoogleCustomSearch) {
+fun MyScreen(viewModel: RecipeViewModelEdaman, navController: NavController, viewModelFirebase: RecipeViewModelFirebase) {
     val isLoading = viewModel.isLoading
     val recipes = viewModel.recipes
     val error = viewModel.error
@@ -112,7 +112,7 @@ fun MyScreen(viewModel: RecipeViewModelEdaman, navController: NavController, vie
                 // Filtrar las recetas para omitir la primera
                 val filteredRecipes = recipes.drop(1)
                 items(filteredRecipes) { recipe ->
-                    RecipeItemRecomendado(recipe,viewModel,viewModelImagen)
+                    RecipeItemRecomendado(recipe,viewModel,viewModelFirebase)
                 }
             }
         } else {
@@ -252,7 +252,11 @@ fun BottomMenu(navController: NavController, selectedIcon: ImageVector) {
 }
 
 @Composable
-fun RecipeItemRecomendado(recipe: Receta, viewModel: RecipeViewModelEdaman, viewModelImagen: RecipeViewModelGoogleCustomSearch) {
+fun RecipeItemRecomendado(
+    recipe: Receta,
+    viewModel: RecipeViewModelEdaman,
+    viewModelFirebase: RecipeViewModelFirebase
+) {
     Card(
         modifier = Modifier
             .width(365.dp)
@@ -302,7 +306,7 @@ fun RecipeItemRecomendado(recipe: Receta, viewModel: RecipeViewModelEdaman, view
                 }
             }
 
-            Row (
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 16.dp)
@@ -312,7 +316,8 @@ fun RecipeItemRecomendado(recipe: Receta, viewModel: RecipeViewModelEdaman, view
                     modifier = Modifier.padding(8.dp)
                 )
             }
-            Row (
+
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 16.dp)
@@ -324,7 +329,14 @@ fun RecipeItemRecomendado(recipe: Receta, viewModel: RecipeViewModelEdaman, view
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(limitedIngredients) { ingredient ->
-                        IngredientItem(ingredient = ingredient, viewModelImagen = viewModelImagen)
+                        var imageUrl by remember { mutableStateOf<String?>(null) }
+
+                        LaunchedEffect(Unit) {
+                            imageUrl = viewModelFirebase.getIngredientImage(ingredient)
+                            print(imageUrl)
+                        }
+
+                        IngredientItem(ingredient = ingredient, imageUrl = imageUrl)
                     }
                 }
             }
@@ -332,23 +344,19 @@ fun RecipeItemRecomendado(recipe: Receta, viewModel: RecipeViewModelEdaman, view
     }
 }
 
+
 @Composable
-fun IngredientItem(ingredient: String, viewModelImagen: RecipeViewModelGoogleCustomSearch) {
-    var imageUrl by remember { mutableStateOf<String?>(null) }
-
-    LaunchedEffect(Unit) {
-        imageUrl = viewModelImagen.getIngredientImage(ingredient)
-    }
-
+fun IngredientItem(ingredient: String, imageUrl: String?) {
     Box(
         modifier = Modifier
-            .size(40.dp)
+            .width(50.dp)
+            .height(50.dp)
             .clip(RoundedCornerShape(8.dp))
-            .background(color = Color.LightGray)
+            .background(color = Color.White)
     ) {
         if (imageUrl != null) {
             Image(
-                painter = rememberAsyncImagePainter(imageUrl!!),
+                painter = rememberAsyncImagePainter(imageUrl),
                 contentDescription = ingredient,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
@@ -362,4 +370,5 @@ fun IngredientItem(ingredient: String, viewModelImagen: RecipeViewModelGoogleCus
         }
     }
 }
+
 

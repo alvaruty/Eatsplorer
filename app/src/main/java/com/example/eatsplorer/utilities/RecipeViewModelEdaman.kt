@@ -11,6 +11,9 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 class RecipeViewModelEdaman : ViewModel() {
+
+    private val firebaseRepository = FirebaseRepository() // Instancia de FirebaseRepository
+
     var searchQuery by mutableStateOf("")
     var recipes by mutableStateOf<List<Receta>>(emptyList())
     var isLoading by mutableStateOf(false)
@@ -65,5 +68,8 @@ class RecipeViewModelEdaman : ViewModel() {
         }
     }
 
+    suspend fun getIngredientImage(ingredient: String): String? {
+        return firebaseRepository.getIngredientImageUrl(ingredient)
+    }
 
 }

@@ -17,12 +17,14 @@ import com.example.eatsplorer.screens.AccountScreen
 import com.example.eatsplorer.screens.LoginScreen
 import com.example.eatsplorer.screens.FavoritesScreen // Importa la nueva pantalla de favoritos
 import com.example.eatsplorer.screens.MyScreen
+import com.example.eatsplorer.screens.RegisterScreen
 import com.example.eatsplorer.ui.theme.EatsplorerTheme
 import com.example.eatsplorer.utilities.RecipeViewModelEdaman
-import com.example.eatsplorer.utilities.RecipeViewModelGoogleCustomSearch
+import com.example.eatsplorer.utilities.RecipeViewModelFirebase
 
 sealed class DestinationScreen(var route: String){
     object Login : DestinationScreen("Login")
+    object SignIn : DestinationScreen("Signin")
     object MainScreen : DestinationScreen("Main")
     object Favorites : DestinationScreen("Favorites") // Nueva pantalla de favoritos
     object Account : DestinationScreen("Account")
@@ -52,14 +54,17 @@ class MainActivity : ComponentActivity() {
     fun AppNavigation(){
         val navController = rememberNavController()
         val recipeViewModel = remember { RecipeViewModelEdaman() }
-        val recipeViewModelImagnes = remember { RecipeViewModelGoogleCustomSearch() }
+        val recipeViewModelImagenes = remember { RecipeViewModelFirebase() }
 
         NavHost(navController = navController, startDestination = DestinationScreen.Login.route){
             composable(DestinationScreen.Login.route){
                 LoginScreen(navController)
             }
+            composable(DestinationScreen.SignIn.route){
+                RegisterScreen(navController)
+            }
             composable(DestinationScreen.MainScreen.route){
-                MyScreen(viewModel = recipeViewModel, navController, recipeViewModelImagnes)
+                MyScreen(viewModel = recipeViewModel, navController, recipeViewModelImagenes)
             }
             composable(DestinationScreen.Favorites.route){
                 FavoritesScreen(navController)

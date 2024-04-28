@@ -19,8 +19,11 @@ import com.example.eatsplorer.screens.FavoritesScreen // Importa la nueva pantal
 import com.example.eatsplorer.screens.MyScreen
 import com.example.eatsplorer.screens.RegisterScreen
 import com.example.eatsplorer.ui.theme.EatsplorerTheme
+import com.example.eatsplorer.utilities.AnalyticsManager
+import com.example.eatsplorer.utilities.AuthManager
 import com.example.eatsplorer.utilities.RecipeViewModelEdaman
 import com.example.eatsplorer.utilities.RecipeViewModelFirebase
+import android.content.Context
 
 sealed class DestinationScreen(var route: String){
     object Login : DestinationScreen("Login")
@@ -41,7 +44,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    AppNavigation()
+                    AppNavigation(this)
                     //val recipeViewModel = remember { RecipeViewModel() } //borrar
 
                     //MainScreen(recipeViewModel)
@@ -51,17 +54,19 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    fun AppNavigation(){
+    fun AppNavigation(context: Context){
         val navController = rememberNavController()
         val recipeViewModel = remember { RecipeViewModelEdaman() }
         val recipeViewModelImagenes = remember { RecipeViewModelFirebase() }
+        val analytics: AnalyticsManager = AnalyticsManager(context)
+        val authManager: AuthManager = AuthManager()
 
         NavHost(navController = navController, startDestination = DestinationScreen.Login.route){
             composable(DestinationScreen.Login.route){
-                LoginScreen(navController)
+                LoginScreen(navController, analytics, authManager)
             }
             composable(DestinationScreen.SignIn.route){
-                RegisterScreen(navController)
+                RegisterScreen(navController, authManager, analytics)
             }
             composable(DestinationScreen.MainScreen.route){
                 MyScreen(viewModel = recipeViewModel, navController, recipeViewModelImagenes)

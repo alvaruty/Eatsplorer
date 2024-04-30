@@ -29,8 +29,9 @@ sealed class DestinationScreen(var route: String){
     object Login : DestinationScreen("Login")
     object SignIn : DestinationScreen("Signin")
     object MainScreen : DestinationScreen("Main")
-    object Favorites : DestinationScreen("Favorites") // Nueva pantalla de favoritos
+    object Favorites : DestinationScreen("Favorites")
     object Account : DestinationScreen("Account")
+    object ChangePassword : DestinationScreen("ChangePassword")
 }
 
 class MainActivity : ComponentActivity() {
@@ -54,29 +55,37 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    fun AppNavigation(context: Context){
+    fun AppNavigation(context: Context) {
         val navController = rememberNavController()
         val recipeViewModel = remember { RecipeViewModelEdaman() }
         val recipeViewModelImagenes = remember { RecipeViewModelFirebase() }
         val analytics: AnalyticsManager = AnalyticsManager(context)
         val authManager: AuthManager = AuthManager()
 
-        NavHost(navController = navController, startDestination = DestinationScreen.Login.route){
-            composable(DestinationScreen.Login.route){
+        val onSignOut: () -> Unit = {
+            // Aquí puedes definir la lógica para cerrar sesión
+            // Por ejemplo, navegar a la pantalla de inicio de sesión
+            navController.navigate(DestinationScreen.Login.route)
+        }
+
+
+        NavHost(navController = navController, startDestination = DestinationScreen.Login.route) {
+            composable(DestinationScreen.Login.route) {
                 LoginScreen(navController, analytics, authManager)
             }
-            composable(DestinationScreen.SignIn.route){
+            composable(DestinationScreen.SignIn.route) {
                 RegisterScreen(navController, authManager, analytics)
             }
-            composable(DestinationScreen.MainScreen.route){
+            composable(DestinationScreen.MainScreen.route) {
                 MyScreen(viewModel = recipeViewModel, navController, recipeViewModelImagenes)
             }
-            composable(DestinationScreen.Favorites.route){
+            composable(DestinationScreen.Favorites.route) {
                 FavoritesScreen(navController)
             }
-            composable(DestinationScreen.Account.route){
-                AccountScreen(navController)
+            composable(DestinationScreen.Account.route) {
+                AccountScreen(navController, authManager, onSignOut, analytics)
             }
         }
     }
 }
+

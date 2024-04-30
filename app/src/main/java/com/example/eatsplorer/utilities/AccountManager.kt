@@ -1,6 +1,10 @@
 package com.example.eatsplorer.utilities
 
+import android.content.Context
+import android.widget.Toast
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.tasks.await
 
 sealed class AuthRes {
@@ -27,6 +31,46 @@ class AuthManager {
         } catch (e: Exception) {
             AuthRes.Error(e.message ?: "Unknown error")
         }
+    }
+
+    suspend fun updatePassword(email: String, currentPassword: String, newPassword: String): AuthRes {
+        return try {
+            // Reautenticar al usuario antes de cambiar la contraseña
+            val currentUser = auth.currentUser
+            val credential = EmailAuthProvider.getCredential(email, currentPassword)
+            currentUser?.reauthenticate(credential)?.await()
+
+            // Cambiar la contraseña
+            currentUser?.updatePassword(newPassword)?.await()
+
+            AuthRes.Success
+        } catch (e: Exception) {
+            AuthRes.Error(e.message ?: "Unknown error")
+        }
+    }
+
+    suspend fun onChangePassword(
+        authManager: AuthManager,
+        email: String,
+        currentPassword: String,
+        newPassword: String,
+        context: Context, // Añade el contexto como parámetro
+        onClose: () -> Unit // Añade la función onClose como parámetro
+    ) {
+        val result = authManager.updatePassword(email, currentPassword, newPassword)
+        if (result is AuthRes.Success) {
+            // Mostrar mensaje de éxito
+            Toast.makeText(context, "Contraseña actualizada correctamente", Toast.LENGTH_SHORT).show()
+            onClose() // Asegúrate de definir onClose en el contexto adecuado
+        } else if (result is AuthRes.Error) {
+            // Mostrar mensaje de error
+            Toast.makeText(context, "Error al cambiar la contraseña: ${result.errorMessage}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+
+    fun getCurrentUser(): FirebaseUser? {
+        return auth.currentUser
     }
 
     fun signOut() {

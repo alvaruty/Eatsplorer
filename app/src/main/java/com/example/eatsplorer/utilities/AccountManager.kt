@@ -59,11 +59,9 @@ class AuthManager {
     ) {
         val result = authManager.updatePassword(email, currentPassword, newPassword)
         if (result is AuthRes.Success) {
-            // Mostrar mensaje de éxito
             Toast.makeText(context, "Contraseña actualizada correctamente", Toast.LENGTH_SHORT).show()
-            onClose() // Asegúrate de definir onClose en el contexto adecuado
+            onClose()
         } else if (result is AuthRes.Error) {
-            // Mostrar mensaje de error
             Toast.makeText(context, "Error al cambiar la contraseña: ${result.errorMessage}", Toast.LENGTH_SHORT).show()
         }
     }
@@ -75,5 +73,11 @@ class AuthManager {
 
     fun signOut() {
         auth.signOut()
+    }
+
+    // Método para obtener el correo electrónico del usuario actual
+    fun getUserEmail(): String {
+        val currentUser = auth.currentUser
+        return currentUser?.email ?: ""
     }
 }

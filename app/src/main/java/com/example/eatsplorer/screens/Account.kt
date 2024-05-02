@@ -3,6 +3,7 @@ package com.example.eatsplorer.screens
 import android.accounts.AccountManager
 import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -10,12 +11,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -45,40 +49,59 @@ fun AccountScreen(
     analytics: AnalyticsManager,
 ) {
     var changePasswordDialogVisible by remember { mutableStateOf(false) }
-    var email by remember { mutableStateOf("") }
-    var currentPassword by remember { mutableStateOf("") }
-    var newPassword by remember { mutableStateOf("") } // Definir newPassword
-    val context = LocalContext.current // Obtener el contexto
-
-    // Función para cerrar el diálogo
-    val closeDialog: () -> Unit = {
-        changePasswordDialogVisible = false
-    }
-
-    // Llamar a onChangePassword cuando el estado del diálogo cambie a true
-    LaunchedEffect(changePasswordDialogVisible) {
-        if (changePasswordDialogVisible) {
-            authManager.onChangePassword(authManager, email, currentPassword, newPassword, context, onClose = closeDialog)
-        }
-    }
+    val userEmail = authManager.getUserEmail() // Obtener el correo electrónico del usuario
 
     Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
     ) {
-        Text(
-            text = "Mi Cuenta",
-            style = TextStyle(
-                fontSize = 27.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
-            ),
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
+        // Box para alinear el icono y el correo electrónico en el centro
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight(),
+            contentAlignment = Alignment.Center // Alineación central vertical y horizontal
+        ) {
+
+            Column(
+                modifier = Modifier.align(Alignment.Center).padding(top = 30.dp)
+            ) {
+                Text(
+                    text = "Mi Cuenta",
+                    style = TextStyle(
+                        fontSize = 27.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    ),
+                    modifier = Modifier.padding(bottom = 16.dp, start = 40.dp)
+                )
+                Spacer(modifier = Modifier.height(25.dp))
+                // Imagen de perfil (sustituir con la imagen real del usuario)
+                Icon(
+                    Icons.Default.AccountCircle,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(220.dp)
+                        .padding(16.dp)
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Correo electrónico del usuario
+                Text(
+                    text = userEmail, // Mostrar el correo electrónico obtenido
+                    style = TextStyle(
+                        fontSize = 18.sp,
+                        color = Color.Black
+                    )
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Botón para cambiar contraseña
         Button(
             onClick = { changePasswordDialogVisible = true }, // Mostrar el diálogo de cambio de contraseña
             modifier = Modifier.fillMaxWidth(),
@@ -99,6 +122,7 @@ fun AccountScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Botón para cerrar sesión
         Button(
             onClick = {
                 authManager.signOut()
@@ -120,8 +144,9 @@ fun AccountScreen(
             )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.weight(1f)) // Espacio flexible para empujar el menú hacia abajo
 
+        // Menú inferior
         BottomMenu(navController, selectedIcon = Icons.Default.AccountCircle)
     }
 
@@ -129,13 +154,15 @@ fun AccountScreen(
     if (changePasswordDialogVisible) {
         ChangePasswordDialog(
             onClose = { changePasswordDialogVisible = false },
-            onChangePassword = { context, newPassword ->
+            onChangePassword = { context, currentPassword ->
                 // No es necesario llamar a onChangePassword aquí
             },
-            currentPassword = currentPassword // Pasar la contraseña actual como un parámetro
+            currentPassword = authManager.getUserEmail() // Pasar el correo electrónico como contraseña actual
         )
     }
 }
+
+
 
 @Composable
 fun ChangePasswordDialog(
@@ -143,10 +170,8 @@ fun ChangePasswordDialog(
     onChangePassword: (Context, String) -> Unit, // Contexto y nueva contraseña como parámetros
     currentPassword: String // Agregar la contraseña actual como un parámetro
 ) {
-    // Estado para almacenar la nueva contraseña ingresada por el usuario
     var newPassword by remember { mutableStateOf("") }
 
-    // Capturar el contexto aquí
     val context = LocalContext.current
 
     // Lógica para confirmar el cambio de contraseña

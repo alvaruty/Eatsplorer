@@ -45,7 +45,7 @@ fun MainScreen(viewModel: RecipeViewModelEdaman) {
         )
 
         Button(
-            onClick = { viewModel.searchRecipes() },
+            onClick = {  },
             modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
         ) {
             if (isLoading) {
@@ -63,14 +63,14 @@ fun MainScreen(viewModel: RecipeViewModelEdaman) {
             modifier = Modifier.fillMaxSize()
         ) {
             items(recipes) { recipe ->
-                RecipeItem(recipe)
+                RecipeItemm(recipe)
             }
         }
     }
 }
 
 @Composable
-fun RecipeItem(recipe: Receta) {
+fun RecipeItemm(recipe: Receta) {
     Card(
         modifier = Modifier
             .fillMaxWidth()

@@ -5,9 +5,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -112,7 +114,7 @@ fun MyScreen(viewModel: RecipeViewModelEdaman, navController: NavController, vie
                 // Filtrar las recetas para omitir la primera
                 val filteredRecipes = recipes.drop(1)
                 items(filteredRecipes) { recipe ->
-                    RecipeItemRecomendado(recipe,viewModel,viewModelFirebase)
+                    RecipeItemRecomendado(recipe, viewModel, viewModelFirebase)
                 }
             }
         } else {
@@ -129,7 +131,6 @@ fun MyScreen(viewModel: RecipeViewModelEdaman, navController: NavController, vie
     }
 }
 
-
 @Composable
 fun SearchBar(viewModel: RecipeViewModelEdaman) {
     OutlinedTextField(
@@ -141,9 +142,16 @@ fun SearchBar(viewModel: RecipeViewModelEdaman) {
             .padding(bottom = 5.dp),
         singleLine = true,
         keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Search),
-        shape = RoundedCornerShape(percent = 50) // Redondear completamente
+        shape = RoundedCornerShape(percent = 50), // Redondear completamente
+        keyboardActions = KeyboardActions(
+            onSearch = {
+                // Realizar búsqueda cuando se presione Enter
+                viewModel.searchRecipes()
+            }
+        )
     )
 }
+
 
 @Composable
 fun Categories() {
@@ -344,6 +352,33 @@ fun RecipeItemRecomendado(
     }
 }
 
+@Composable
+fun RecipeItem(recipe: Receta) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 8.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(text = recipe.label)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(text = "Ingredientes:")
+            recipe.ingredientLines?.let {
+                if (it.isNotEmpty()) {
+                    it.forEach { ingredient ->
+                        Text(text = "- ${ingredient.toString()}")
+                    }
+                } else {
+                    Text(text = "No se encontraron ingredientes.")
+                }
+            } ?: run {
+                Text(text = "No se encontraron ingredientes.")
+            }
+        }
+    }
+}
 
 @Composable
 fun IngredientItem(ingredient: String, imageUrl: String?) {

@@ -1,18 +1,30 @@
 package com.example.eatsplorer.screens
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -37,24 +49,22 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
 import com.example.eatsplorer.DestinationScreen
-import com.example.eatsplorer.utilities.RecipeViewModelEdaman
 import com.example.eatsplorer.R
 import com.example.eatsplorer.utilities.Receta
-import coil.compose.rememberAsyncImagePainter
+import com.example.eatsplorer.utilities.RecipeViewModelEdaman
 import com.example.eatsplorer.utilities.RecipeViewModelFirebase
 
 
 @Composable
 fun MyScreen(viewModel: RecipeViewModelEdaman, navController: NavController, viewModelFirebase: RecipeViewModelFirebase) {
+    var showRecommended by remember { mutableStateOf(true) } // Estado para controlar la visibilidad de la sección "Recomendados"
+    var selectedCategories by remember { mutableStateOf(emptyList<String>()) } // Estado para las categorías seleccionadas
+
     val isLoading = viewModel.isLoading
     val recipes = viewModel.recipes
     val error = viewModel.error
-
-    // Llamamos a getRecommendedRecipes() al cargar la pantalla
-    LaunchedEffect(Unit) {
-        viewModel.getRecommendedRecipes()
-    }
 
     Column(
         modifier = Modifier
@@ -62,7 +72,9 @@ fun MyScreen(viewModel: RecipeViewModelEdaman, navController: NavController, vie
             .padding(16.dp)
     ) {
         // Barra de búsqueda
-        SearchBar(viewModel)
+        SearchBar(viewModel) {
+            showRecommended = it.isEmpty() // Actualizar el estado basado en si el campo de búsqueda está vacío
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -80,21 +92,31 @@ fun MyScreen(viewModel: RecipeViewModelEdaman, navController: NavController, vie
         Spacer(modifier = Modifier.height(8.dp))
 
         // Filtros de categorías
-        Categories()
+        Categories { categories ->
+            selectedCategories = categories
+            viewModel.getRecipesByCategory(categories)
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Título de recomendados
-        Text(
-            text = "Recomendados",
-            color = Color.Black,
-            style = TextStyle(
-                fontSize = 27.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
-            ),
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
+        // Título de recomendados (mostrar solo si el campo de búsqueda está vacío)
+        if (showRecommended) {
+            Text(
+                text = "Recomendados",
+                color = Color.Black,
+                style = TextStyle(
+                    fontSize = 27.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
+                ),
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            // Ejecutar getRecommendedRecipes solo una vez al cargar la pantalla
+            LaunchedEffect(showRecommended) {
+                viewModel.getRecommendedRecipes()
+            }
+        }
+
 
         if (isLoading) {
             // Muestra un indicador de carga
@@ -131,11 +153,16 @@ fun MyScreen(viewModel: RecipeViewModelEdaman, navController: NavController, vie
     }
 }
 
+
 @Composable
-fun SearchBar(viewModel: RecipeViewModelEdaman) {
+fun SearchBar(viewModel: RecipeViewModelEdaman, onSearch: (String) -> Unit) {
     OutlinedTextField(
         value = viewModel.searchQuery,
-        onValueChange = { viewModel.searchQuery = it },
+        onValueChange = { newValue ->
+            viewModel.searchQuery = newValue
+            // Llamar a la función onSearch cuando el valor cambie
+            onSearch(newValue)
+        },
         placeholder = { Text("Buscar") },
         modifier = Modifier
             .fillMaxWidth()
@@ -152,9 +179,8 @@ fun SearchBar(viewModel: RecipeViewModelEdaman) {
     )
 }
 
-
 @Composable
-fun Categories() {
+fun Categories(onCategoriesSelected: (List<String>) -> Unit) {
     val categories = listOf(
         CategoryItem("Pollo", R.drawable.pollo),
         CategoryItem("Arroz", R.drawable.arroz),
@@ -166,13 +192,19 @@ fun Categories() {
 
     LazyRow(modifier = Modifier.fillMaxWidth()) {
         items(categories) { category ->
-            CategoryItem(category)
+            CategoryItem(category.name, category.imageRes) { categoryName, isSelected ->
+                if (isSelected) {
+                    onCategoriesSelected(listOf(categoryName))
+                } else {
+                    onCategoriesSelected(emptyList())
+                }
+            }
         }
     }
 }
 
 @Composable
-fun CategoryItem(category: CategoryItem) {
+fun CategoryItem(name: String, @DrawableRes imageRes: Int, onCategorySelected: (String, Boolean) -> Unit) {
     var isSelected by remember { mutableStateOf(false) }
 
     Box(
@@ -191,7 +223,7 @@ fun CategoryItem(category: CategoryItem) {
             )
             .clickable {
                 isSelected = !isSelected
-                // Aquí puedes realizar la acción que desees al hacer clic
+                onCategorySelected(name, isSelected)
             },
         contentAlignment = Alignment.Center
     ) {
@@ -200,13 +232,13 @@ fun CategoryItem(category: CategoryItem) {
             verticalArrangement = Arrangement.Center
         ) {
             Image(
-                painter = painterResource(id = category.imageRes),
-                contentDescription = category.name,
+                painter = painterResource(id = imageRes),
+                contentDescription = null,
                 modifier = Modifier.size(40.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = category.name,
+                text = name,
                 color = if (isSelected) Color.White else Color.Black
             )
         }
@@ -347,34 +379,6 @@ fun RecipeItemRecomendado(
                         IngredientItem(ingredient = ingredient, imageUrl = imageUrl)
                     }
                 }
-            }
-        }
-    }
-}
-
-@Composable
-fun RecipeItem(recipe: Receta) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 8.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text(text = recipe.label)
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(text = "Ingredientes:")
-            recipe.ingredientLines?.let {
-                if (it.isNotEmpty()) {
-                    it.forEach { ingredient ->
-                        Text(text = "- ${ingredient.toString()}")
-                    }
-                } else {
-                    Text(text = "No se encontraron ingredientes.")
-                }
-            } ?: run {
-                Text(text = "No se encontraron ingredientes.")
             }
         }
     }

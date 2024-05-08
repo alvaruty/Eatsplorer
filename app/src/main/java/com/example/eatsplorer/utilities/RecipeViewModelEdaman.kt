@@ -47,6 +47,29 @@ class RecipeViewModelEdaman : ViewModel() {
         }
     }
 
+    fun getRecipesByCategory(categories: List<String>) {
+        isLoading = true
+        viewModelScope.launch {
+            try {
+                val ingredientsQuery = categories.joinToString(",") // Convertir la lista de ingredientes en una cadena separada por comas
+                val response = edamamApi.getRecipesByIngredient(ingredientsQuery, appId, appKey, "es")
+                if (response.hits.isNotEmpty()) {
+                    recipes = response.hits.map { it.recipe }
+                    error = null
+                } else {
+                    error = "No se encontraron recetas"
+                }
+            } catch (e: Exception) {
+                error = "Error al buscar recetas: ${e.message}"
+            } finally {
+                isLoading = false
+            }
+        }
+    }
+
+
+
+
     fun getRecommendedRecipes() {
         isLoading = true
         viewModelScope.launch {

@@ -1,6 +1,7 @@
 package com.example.eatsplorer
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -14,16 +15,17 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.eatsplorer.screens.AccountScreen
+import com.example.eatsplorer.screens.FavoritesScreen
 import com.example.eatsplorer.screens.LoginScreen
-import com.example.eatsplorer.screens.FavoritesScreen // Importa la nueva pantalla de favoritos
 import com.example.eatsplorer.screens.MyScreen
 import com.example.eatsplorer.screens.RegisterScreen
 import com.example.eatsplorer.ui.theme.EatsplorerTheme
 import com.example.eatsplorer.utilities.AnalyticsManager
 import com.example.eatsplorer.utilities.AuthManager
+import com.example.eatsplorer.utilities.FirestoreManager
+import com.example.eatsplorer.utilities.RealtimeManager
 import com.example.eatsplorer.utilities.RecipeViewModelEdaman
 import com.example.eatsplorer.utilities.RecipeViewModelFirebase
-import android.content.Context
 
 sealed class DestinationScreen(var route: String){
     object Login : DestinationScreen("Login")
@@ -58,13 +60,15 @@ class MainActivity : ComponentActivity() {
     fun AppNavigation(context: Context) {
         val navController = rememberNavController()
         val recipeViewModel = remember { RecipeViewModelEdaman() }
-        val recipeViewModelImagenes = remember { RecipeViewModelFirebase() }
+        val recipeViewModelFirebase = remember { RecipeViewModelFirebase() }
         val analytics: AnalyticsManager = AnalyticsManager(context)
-        val authManager: AuthManager = AuthManager()
+        val authManager: AuthManager = remember { AuthManager(context)}
+        val realtimeManager: RealtimeManager = remember { RealtimeManager(context)}
+        val firestore: FirestoreManager = remember {FirestoreManager(context)}
 
         val onSignOut: () -> Unit = {
             // Aquí puedes definir la lógica para cerrar sesión
-            // Por ejemplo, navegar a la pantalla de inicio de sesión
+            // navegar a la pantalla de inicio de sesión
             navController.navigate(DestinationScreen.Login.route)
         }
 
@@ -77,10 +81,10 @@ class MainActivity : ComponentActivity() {
                 RegisterScreen(navController, authManager, analytics)
             }
             composable(DestinationScreen.MainScreen.route) {
-                MyScreen(viewModel = recipeViewModel, navController, recipeViewModelImagenes)
+                MyScreen(viewModel = recipeViewModel, navController, recipeViewModelFirebase)
             }
             composable(DestinationScreen.Favorites.route) {
-                FavoritesScreen(navController)
+                FavoritesScreen(navController, firestore, authManager)
             }
             composable(DestinationScreen.Account.route) {
                 AccountScreen(navController, authManager, onSignOut, analytics)

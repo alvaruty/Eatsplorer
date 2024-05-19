@@ -12,7 +12,7 @@ sealed class AuthRes {
     data class Error(val errorMessage: String) : AuthRes()
 }
 
-class AuthManager {
+class AuthManager(private val context: Context) {
     private val auth = FirebaseAuth.getInstance()
 
     suspend fun createUserWithEmailAndPassword(email: String, password: String): AuthRes {

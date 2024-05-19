@@ -6,9 +6,11 @@ import kotlinx.coroutines.tasks.await
 
 class FirebaseRepository {
 
+
     private val storage = Firebase.storage
     private val storageReference = storage.reference.child("ingredient_images")
 
+    // Método para obtener la URL de la imagen del ingrediente desde Firebase Storage
     suspend fun getIngredientImageUrl(ingredientName: String): String? {
         return try {
             val imageRef = storageReference.child("$ingredientName.png") // Asumiendo que las imágenes están en formato PNG
@@ -18,4 +20,5 @@ class FirebaseRepository {
             null
         }
     }
+
 }

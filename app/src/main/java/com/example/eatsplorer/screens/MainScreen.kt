@@ -409,5 +409,3 @@ fun IngredientItem(ingredient: String, imageUrl: String?) {
         }
     }
 }
-
-

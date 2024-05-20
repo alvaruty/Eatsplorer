@@ -5,6 +5,6 @@ data class Recetass(
     val name: String = "",
     val ingredients: String = "",
     val instructions: String = "",
-    val imagen: String = "",
+    var imagen: String = "",
     var uid: String = ""
 )

@@ -66,7 +66,12 @@ dependencies {
     implementation("com.google.firebase:firebase-database-ktx")
     implementation("com.google.firebase:firebase-auth-ktx:23.0.0")
     implementation("com.google.firebase:firebase-firestore-ktx:25.0.0")
-    // For control over item selection of both touch and mouse driven selection
+    // camara
+    implementation ("com.github.bumptech.glide:glide:4.12.0")
+    implementation ("androidx.activity:activity-compose:1.3.1")
+    implementation ("androidx.lifecycle:lifecycle-runtime-ktx:2.3.1")
+    implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:1.0.0-alpha07")
+    //
     implementation("androidx.recyclerview:recyclerview-selection:1.1.0")
 
     implementation ("io.coil-kt:coil-compose:2.4.0")

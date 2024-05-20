@@ -1,6 +1,11 @@
 package com.example.eatsplorer.screens
 
+import FirestoreManager
 import android.annotation.SuppressLint
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -44,8 +49,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.rememberImagePainter
 import com.example.eatsplorer.utilities.AuthManager
-import com.example.eatsplorer.utilities.FirestoreManager
 import com.example.eatsplorer.utilities.Recetass
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -56,7 +61,7 @@ import kotlinx.coroutines.launch
 fun FavoritesScreen(navController: NavController, firestore: FirestoreManager, authManager: AuthManager) {
     var showAddRecipeDialog by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-    val recetas by firestore.getNotesFlow().collectAsState(emptyList())
+    val recetas by firestore.getNotesFlow().collectAsState(initial = emptyList())
 
     Scaffold(
         floatingActionButton = {
@@ -71,9 +76,9 @@ fun FavoritesScreen(navController: NavController, firestore: FirestoreManager, a
 
             if (showAddRecipeDialog) {
                 AddRecipeDialog(
-                    onRecipeAdded = { recipe ->
+                    onRecipeAdded = { recipe, imageUri ->
                         scope.launch {
-                            firestore.addReceta(recipe)
+                            firestore.addReceta(recipe, imageUri)
                         }
                         showAddRecipeDialog = false
                     },
@@ -83,7 +88,7 @@ fun FavoritesScreen(navController: NavController, firestore: FirestoreManager, a
             }
         }
     ) {
-        if(!recetas.isNullOrEmpty()) {
+        if (recetas.isNotEmpty()) {
             LazyColumn {
                 itemsIndexed(recetas) { index, recipe ->
                     RecipeItem(recipe = recipe, firestore = firestore)
@@ -109,17 +114,18 @@ fun FavoritesScreen(navController: NavController, firestore: FirestoreManager, a
                 Spacer(modifier = Modifier.height(50.dp))
                 Icon(imageVector = Icons.Default.FoodBank, contentDescription = null, modifier = Modifier.size(150.dp))
                 Spacer(modifier = Modifier.height(16.dp))
-                Text(text = "No se encontraron \nRecetas",
-                    fontSize = 20.sp, textAlign = TextAlign.Center)
+                Text(
+                    text = "No se encontraron \nRecetas",
+                    fontSize = 20.sp, textAlign = TextAlign.Center
+                )
                 Spacer(modifier = Modifier.weight(1f))
                 // Menú inferior
                 BottomMenu(navController, selectedIcon = Icons.Default.Favorite)
             }
         }
     }
-
-
 }
+
 
 @Composable
 fun RecipeItem(recipe: Recetass, firestore: FirestoreManager) {
@@ -146,8 +152,8 @@ fun RecipeItem(recipe: Recetass, firestore: FirestoreManager) {
     Card(
         modifier = Modifier
             .padding(start = 15.dp, end = 15.dp, top = 15.dp, bottom = 0.dp)
-            .fillMaxWidth())
-    {
+            .fillMaxWidth()
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxSize()
@@ -155,27 +161,37 @@ fun RecipeItem(recipe: Recetass, firestore: FirestoreManager) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            if (recipe.imagen.isNotEmpty()) {
+                Image(
+                    painter = rememberImagePainter(recipe.imagen),
+                    contentDescription = null,
+                    modifier = Modifier.size(100.dp)
+                )
+            }
             Column(modifier = Modifier.weight(3f)) {
                 Text(
                     text = recipe.name,
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis)
+                    overflow = TextOverflow.Ellipsis
+                )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = recipe.ingredients,
                     fontWeight = FontWeight.Medium,
                     fontSize = 15.sp,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis)
+                    overflow = TextOverflow.Ellipsis
+                )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = recipe.instructions,
                     fontWeight = FontWeight.Thin,
                     fontSize = 12.sp,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis)
+                    overflow = TextOverflow.Ellipsis
+                )
             }
             Row(
                 modifier = Modifier.weight(1f),
@@ -193,12 +209,24 @@ fun RecipeItem(recipe: Recetass, firestore: FirestoreManager) {
     }
 }
 
+
 @Composable
-fun AddRecipeDialog(onRecipeAdded: (Recetass) -> Unit, onDialogDismissed: () -> Unit, authManager: AuthManager) {
+fun AddRecipeDialog(
+    onRecipeAdded: (Recetass, Uri?) -> Unit,
+    onDialogDismissed: () -> Unit,
+    authManager: AuthManager
+) {
     var name by remember { mutableStateOf("") }
     var ingredients by remember { mutableStateOf("") }
     var instructions by remember { mutableStateOf("") }
     var uid = authManager.getCurrentUser()?.uid
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+
+    val imageLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        selectedImageUri = uri
+    }
 
     AlertDialog(
         onDismissRequest = {},
@@ -212,7 +240,7 @@ fun AddRecipeDialog(onRecipeAdded: (Recetass) -> Unit, onDialogDismissed: () -> 
                         instructions = instructions,
                         uid = uid.toString()
                     )
-                    onRecipeAdded(newRecipe)
+                    onRecipeAdded(newRecipe, selectedImageUri)
                     name = ""
                     ingredients = ""
                     instructions = ""
@@ -252,6 +280,14 @@ fun AddRecipeDialog(onRecipeAdded: (Recetass) -> Unit, onDialogDismissed: () -> 
                     keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Text),
                     label = { Text(text = "Instrucciones") }
                 )
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    onClick = {
+                        imageLauncher.launch("image/*")
+                    }
+                ) {
+                    Text(text = "Seleccionar Imagen")
+                }
             }
         }
     )

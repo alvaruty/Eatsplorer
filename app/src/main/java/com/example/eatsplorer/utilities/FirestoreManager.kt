@@ -1,20 +1,30 @@
-package com.example.eatsplorer.utilities
-
 import android.content.Context
+import android.net.Uri
+import com.example.eatsplorer.utilities.AuthManager
+import com.example.eatsplorer.utilities.Recetass
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import java.util.*
 
 class FirestoreManager(context: Context) {
     private val firestore = FirebaseFirestore.getInstance()
     private val auth = AuthManager(context)
     private val userId = auth.getCurrentUser()?.uid
+    private val storage = FirebaseStorage.getInstance()
 
-    suspend fun addReceta(receta: Recetass) {
+    suspend fun addReceta(receta: Recetass, imageUri: Uri?) {
         receta.uid = userId.toString()
+
+        if (imageUri != null) {
+            val imageUrl = uploadImage(imageUri)
+            receta.imagen = imageUrl
+        }
+
         firestore.collection("recetas").add(receta).await()
     }
 
@@ -29,9 +39,10 @@ class FirestoreManager(context: Context) {
     }
 
     fun getNotesFlow(): Flow<List<Recetass>> = callbackFlow {
+        val userId = auth.getCurrentUser()?.uid
         val notesRef = firestore.collection("recetas")
             .whereEqualTo("uid", userId)
-            .orderBy("name") // Cambiado de "title" a "name" según la estructura de tu documento
+            .orderBy("name")
 
         val subscription = notesRef.addSnapshotListener { snapshot, error ->
             if (error != null) {
@@ -52,4 +63,9 @@ class FirestoreManager(context: Context) {
         awaitClose { subscription.remove() }
     }
 
+    private suspend fun uploadImage(imageUri: Uri): String {
+        val ref = storage.reference.child("images/${UUID.randomUUID()}")
+        val uploadTask = ref.putFile(imageUri).await()
+        return ref.downloadUrl.await().toString()
+    }
 }

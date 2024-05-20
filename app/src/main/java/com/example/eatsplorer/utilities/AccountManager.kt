@@ -68,7 +68,7 @@ class AuthManager(private val context: Context) {
 
 
     fun getCurrentUser(): FirebaseUser? {
-        return auth.currentUser
+        return FirebaseAuth.getInstance().currentUser
     }
 
     fun signOut() {

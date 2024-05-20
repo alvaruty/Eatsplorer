@@ -1,5 +1,6 @@
 package com.example.eatsplorer
 
+import FirestoreManager
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
@@ -22,7 +23,6 @@ import com.example.eatsplorer.screens.RegisterScreen
 import com.example.eatsplorer.ui.theme.EatsplorerTheme
 import com.example.eatsplorer.utilities.AnalyticsManager
 import com.example.eatsplorer.utilities.AuthManager
-import com.example.eatsplorer.utilities.FirestoreManager
 import com.example.eatsplorer.utilities.RealtimeManager
 import com.example.eatsplorer.utilities.RecipeViewModelEdaman
 import com.example.eatsplorer.utilities.RecipeViewModelFirebase

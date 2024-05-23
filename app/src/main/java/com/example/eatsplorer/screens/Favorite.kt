@@ -6,6 +6,7 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -55,13 +56,37 @@ import com.example.eatsplorer.utilities.Recetass
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.LaunchedEffect
+import com.example.eatsplorer.DestinationScreen
+
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun FavoritesScreen(navController: NavController, firestore: FirestoreManager, authManager: AuthManager) {
     var showAddRecipeDialog by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    val uid = authManager.getCurrentUser()?.uid ?: ""
+
     val recetas by firestore.getNotesFlow().collectAsState(initial = emptyList())
+
+    val permissionsLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val allPermissionsGranted = permissions.entries.all { it.value }
+        if (!allPermissionsGranted) {
+            // Manejar el caso en que los permisos no fueron otorgados
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        permissionsLauncher.launch(
+            arrayOf(
+                android.Manifest.permission.CAMERA,
+                android.Manifest.permission.READ_EXTERNAL_STORAGE,
+                android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+            )
+        )
+    }
 
     Scaffold(
         floatingActionButton = {
@@ -91,7 +116,7 @@ fun FavoritesScreen(navController: NavController, firestore: FirestoreManager, a
         if (recetas.isNotEmpty()) {
             LazyColumn {
                 itemsIndexed(recetas) { index, recipe ->
-                    RecipeItem(recipe = recipe, firestore = firestore)
+                    RecipeItem(navController = navController, recipe = recipe, firestore = firestore)
                 }
             }
             Column(
@@ -100,7 +125,6 @@ fun FavoritesScreen(navController: NavController, firestore: FirestoreManager, a
                     .padding(16.dp),
             ) {
                 Spacer(modifier = Modifier.weight(1f))
-                // Menú inferior
                 BottomMenu(navController, selectedIcon = Icons.Default.Favorite)
             }
         } else {
@@ -119,7 +143,6 @@ fun FavoritesScreen(navController: NavController, firestore: FirestoreManager, a
                     fontSize = 20.sp, textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.weight(1f))
-                // Menú inferior
                 BottomMenu(navController, selectedIcon = Icons.Default.Favorite)
             }
         }
@@ -127,8 +150,9 @@ fun FavoritesScreen(navController: NavController, firestore: FirestoreManager, a
 }
 
 
+
 @Composable
-fun RecipeItem(recipe: Recetass, firestore: FirestoreManager) {
+fun RecipeItem(navController: NavController, recipe: Recetass, firestore: FirestoreManager) {
     var showDeleteRecipeDialog by remember { mutableStateOf(false) }
 
     val onDeleteRecipeConfirmed: () -> Unit = {
@@ -153,6 +177,9 @@ fun RecipeItem(recipe: Recetass, firestore: FirestoreManager) {
         modifier = Modifier
             .padding(start = 15.dp, end = 15.dp, top = 15.dp, bottom = 0.dp)
             .fillMaxWidth()
+            .clickable {
+                navController.navigate(DestinationScreen.RecipeDetail.createRoute(recipe.key ?: ""))
+            }
     ) {
         Row(
             modifier = Modifier
@@ -184,14 +211,6 @@ fun RecipeItem(recipe: Recetass, firestore: FirestoreManager) {
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = recipe.instructions,
-                    fontWeight = FontWeight.Thin,
-                    fontSize = 12.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
             }
             Row(
                 modifier = Modifier.weight(1f),
@@ -210,6 +229,7 @@ fun RecipeItem(recipe: Recetass, firestore: FirestoreManager) {
 }
 
 
+
 @Composable
 fun AddRecipeDialog(
     onRecipeAdded: (Recetass, Uri?) -> Unit,
@@ -219,7 +239,7 @@ fun AddRecipeDialog(
     var name by remember { mutableStateOf("") }
     var ingredients by remember { mutableStateOf("") }
     var instructions by remember { mutableStateOf("") }
-    var uid = authManager.getCurrentUser()?.uid
+    val uid = authManager.getCurrentUser()?.uid
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
 
     val imageLauncher = rememberLauncherForActivityResult(
@@ -275,6 +295,9 @@ fun AddRecipeDialog(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 TextField(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(100.dp),
                     value = instructions,
                     onValueChange = { instructions = it },
                     keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Text),
@@ -292,6 +315,7 @@ fun AddRecipeDialog(
         }
     )
 }
+
 
 @Composable
 fun DeleteRecipeDialog(onConfirmDelete: () -> Unit, onDismiss: () -> Unit) {

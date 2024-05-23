@@ -2,6 +2,7 @@ import android.content.Context
 import android.net.Uri
 import com.example.eatsplorer.utilities.AuthManager
 import com.example.eatsplorer.utilities.Recetass
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.storage.FirebaseStorage
@@ -14,11 +15,10 @@ import java.util.*
 class FirestoreManager(context: Context) {
     private val firestore = FirebaseFirestore.getInstance()
     private val auth = AuthManager(context)
-    private val userId = auth.getCurrentUser()?.uid
     private val storage = FirebaseStorage.getInstance()
 
     suspend fun addReceta(receta: Recetass, imageUri: Uri?) {
-        receta.uid = userId.toString()
+        receta.uid = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 
         if (imageUri != null) {
             val imageUrl = uploadImage(imageUri)
@@ -67,5 +67,15 @@ class FirestoreManager(context: Context) {
         val ref = storage.reference.child("images/${UUID.randomUUID()}")
         val uploadTask = ref.putFile(imageUri).await()
         return ref.downloadUrl.await().toString()
+    }
+
+    suspend fun getRecetaByKey(key: String): Recetass? {
+        return try {
+            val snapshot = firestore.collection("recetas").document(key).get().await()
+            snapshot.toObject(Recetass::class.java)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
     }
 }

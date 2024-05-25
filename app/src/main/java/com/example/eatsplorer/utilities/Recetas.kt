@@ -33,9 +33,10 @@ data class Hit(
 data class Receta(
     val uri: String,
     val label: String,
-    val image: String?,  // Nueva propiedad para la imagen
-    val yield: Int,  // Nueva propiedad para las porciones
-    val ingredientLines: List<String>?
+    val image: String?,
+    val yield: Int,
+    val ingredientLines: List<String>?,
+    val instructions: List<String>?
 )
 
 data class Ingrediente(

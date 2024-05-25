@@ -1,5 +1,6 @@
 package com.example.eatsplorer.screens
 
+import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -136,7 +137,7 @@ fun MyScreen(viewModel: RecipeViewModelEdaman, navController: NavController, vie
                 // Filtrar las recetas para omitir la primera
                 val filteredRecipes = recipes.drop(1)
                 items(filteredRecipes) { recipe ->
-                    RecipeItemRecomendado(recipe, viewModel, viewModelFirebase)
+                    RecipeItemRecomendado(recipe, viewModel, viewModelFirebase, navController)
                 }
             }
         } else {
@@ -295,13 +296,18 @@ fun BottomMenu(navController: NavController, selectedIcon: ImageVector) {
 fun RecipeItemRecomendado(
     recipe: Receta,
     viewModel: RecipeViewModelEdaman,
-    viewModelFirebase: RecipeViewModelFirebase
+    viewModelFirebase: RecipeViewModelFirebase,
+    navController: NavController
 ) {
     Card(
         modifier = Modifier
             .width(365.dp)
             .height(380.dp)
-            .padding(20.dp),
+            .padding(20.dp)
+            .clickable {
+                Log.d("RecipeItem", "Clicked on recipe: ${recipe.label}")
+                navController.navigate(DestinationScreen.RecipeDetailMain.createRoute(recipe.label))
+            },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color(android.graphics.Color.parseColor("#EAEAEA")),
@@ -315,7 +321,6 @@ fun RecipeItemRecomendado(
                     .fillMaxWidth()
                     .padding(top = 40.dp)
             ) {
-                // Imagen de la receta si está disponible
                 if (!recipe.image.isNullOrEmpty()) {
                     Image(
                         painter = rememberAsyncImagePainter(recipe.image),
@@ -362,7 +367,6 @@ fun RecipeItemRecomendado(
                     .fillMaxWidth()
                     .padding(top = 16.dp)
             ) {
-                // Mostrar solo los primeros 5 ingredientes
                 val limitedIngredients = recipe.ingredientLines?.take(5) ?: emptyList()
                 LazyRow(
                     modifier = Modifier.padding(8.dp),
@@ -383,6 +387,7 @@ fun RecipeItemRecomendado(
         }
     }
 }
+
 
 @Composable
 fun IngredientItem(ingredient: String, imageUrl: String?) {

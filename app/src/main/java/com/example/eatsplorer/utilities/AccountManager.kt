@@ -80,4 +80,19 @@ class AuthManager(private val context: Context) {
         val currentUser = auth.currentUser
         return currentUser?.email ?: ""
     }
+
+    fun sendPasswordResetEmail(email: String, callback: (Boolean) -> Unit) {
+        auth.sendPasswordResetEmail(email)
+            .addOnCompleteListener { task ->
+                callback(task.isSuccessful)
+            }
+    }
+
+    fun deleteAccount(callback: (Boolean) -> Unit) {
+        val user = auth.currentUser
+        user?.delete()
+            ?.addOnCompleteListener { task ->
+                callback(task.isSuccessful)
+            }
+    }
 }

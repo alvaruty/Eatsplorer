@@ -4,6 +4,7 @@ import FirestoreManager
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,12 +26,14 @@ import com.example.eatsplorer.screens.AccountScreen
 import com.example.eatsplorer.screens.FavoritesScreen
 import com.example.eatsplorer.screens.LoginScreen
 import com.example.eatsplorer.screens.MyScreen
+import com.example.eatsplorer.screens.RecipeDetailMainScreen
 import com.example.eatsplorer.screens.RecipeDetailScreen
 import com.example.eatsplorer.screens.RegisterScreen
 import com.example.eatsplorer.ui.theme.EatsplorerTheme
 import com.example.eatsplorer.utilities.AnalyticsManager
 import com.example.eatsplorer.utilities.AuthManager
 import com.example.eatsplorer.utilities.RealtimeManager
+import com.example.eatsplorer.utilities.Receta
 import com.example.eatsplorer.utilities.Recetass
 import com.example.eatsplorer.utilities.RecipeViewModelEdaman
 import com.example.eatsplorer.utilities.RecipeViewModelFirebase
@@ -43,6 +46,9 @@ sealed class DestinationScreen(var route: String){
     object Account : DestinationScreen("Account")
     object RecipeDetail : DestinationScreen("recipeDetail/{recipeKey}") {
         fun createRoute(recipeKey: String) = "recipeDetail/$recipeKey"
+    }
+    object RecipeDetailMain : DestinationScreen("recipe_detail_screen") {
+        fun createRoute(recipeKey: String) = "recipe_detail_screen/$recipeKey"
     }
 }
 
@@ -58,9 +64,6 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     AppNavigation(this)
-                    //val recipeViewModel = remember { RecipeViewModel() } //borrar
-
-                    //MainScreen(recipeViewModel)
                 }
             }
         }
@@ -119,7 +122,21 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
+            composable(
+                route = "${DestinationScreen.RecipeDetailMain.route}/{recipeKey}",
+                arguments = listOf(navArgument("recipeKey") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val recipeKey = backStackEntry.arguments?.getString("recipeKey")
+                val recipe = recipeViewModel.recipes.find { it.label == recipeKey }
+                if (recipe != null) {
+                    RecipeDetailMainScreen(navController, recipe)
+                } else {
+                    // Text("Receta no encontrada.")
+                }
+            }
+
         }
     }
+
 }
 

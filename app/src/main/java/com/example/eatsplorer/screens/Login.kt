@@ -122,7 +122,6 @@ fun LoginButton(navController: NavController, email: String, contraseña: String
                     navController.navigate(DestinationScreen.MainScreen.route)
                 } else if (signInResult is AuthRes.Error) {
                     // Si hay un error durante el inicio de sesión, maneja el error aquí
-                    // Por ejemplo, puedes mostrar un mensaje de error
                     Toast.makeText(navController.context, signInResult.errorMessage, Toast.LENGTH_SHORT).show()
                 }
             }

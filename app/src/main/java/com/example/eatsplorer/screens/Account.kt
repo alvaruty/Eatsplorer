@@ -1,36 +1,16 @@
 package com.example.eatsplorer.screens
 
-import android.accounts.AccountManager
 import android.content.Context
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentHeight
+import android.widget.Toast
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -38,7 +18,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.eatsplorer.utilities.AnalyticsManager
 import com.example.eatsplorer.utilities.AuthManager
-import androidx.compose.ui.platform.LocalContext
 
 
 @Composable
@@ -49,21 +28,22 @@ fun AccountScreen(
     analytics: AnalyticsManager,
 ) {
     var changePasswordDialogVisible by remember { mutableStateOf(false) }
+    var deleteAccountDialogVisible by remember { mutableStateOf(false) }
     val userEmail = authManager.getUserEmail() // Obtener el correo electrónico del usuario
+    var passwordResetSuccess by remember { mutableStateOf<Boolean?>(null) } // Estado para mostrar el resultado del restablecimiento de contraseña
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // Box para alinear el icono y el correo electrónico en el centro
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .wrapContentHeight(),
-            contentAlignment = Alignment.Center // Alineación central vertical y horizontal
+            contentAlignment = Alignment.Center
         ) {
-
             Column(
                 modifier = Modifier.align(Alignment.Center).padding(top = 30.dp)
             ) {
@@ -77,7 +57,6 @@ fun AccountScreen(
                     modifier = Modifier.padding(bottom = 16.dp, start = 40.dp)
                 )
                 Spacer(modifier = Modifier.height(25.dp))
-                // Imagen de perfil (sustituir con la imagen real del usuario)
                 Icon(
                     Icons.Default.AccountCircle,
                     contentDescription = null,
@@ -85,7 +64,6 @@ fun AccountScreen(
                         .size(220.dp)
                         .padding(16.dp)
                 )
-
                 Spacer(modifier = Modifier.height(10.dp))
 
                 // Correo electrónico del usuario
@@ -144,25 +122,74 @@ fun AccountScreen(
             )
         }
 
-        Spacer(modifier = Modifier.weight(1f)) // Espacio flexible para empujar el menú hacia abajo
+        Spacer(modifier = Modifier.height(16.dp))
 
+        // Botón para eliminar cuenta
+        Button(
+            onClick = { deleteAccountDialogVisible = true }, // Mostrar el diálogo de confirmación de eliminación de cuenta
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(
+                Color.White
+            ),
+            contentPadding = PaddingValues(vertical = 16.dp)
+        ) {
+            Text(
+                text = "Eliminar Cuenta",
+                style = TextStyle(
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Red
+                )
+            )
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
         // Menú inferior
         BottomMenu(navController, selectedIcon = Icons.Default.AccountCircle)
+    }
+
+    // Mostrar el resultado del restablecimiento de contraseña
+    passwordResetSuccess?.let { success ->
+        val message = if (success) {
+            "Se ha enviado un correo para restablecer la contraseña."
+        } else {
+            "Error al enviar el correo para restablecer la contraseña."
+        }
+        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
     }
 
     // Cuadro de diálogo para cambiar contraseña
     if (changePasswordDialogVisible) {
         ChangePasswordDialog(
             onClose = { changePasswordDialogVisible = false },
-            onChangePassword = { context, currentPassword ->
-                // No es necesario llamar a onChangePassword aquí
+            onChangePassword = { context, email ->
+                authManager.sendPasswordResetEmail(email) { success ->
+                    passwordResetSuccess = success
+                    changePasswordDialogVisible = false
+                }
             },
-            currentPassword = authManager.getUserEmail() // Pasar el correo electrónico como contraseña actual
+            currentPassword = userEmail // Pasar el correo electrónico como contraseña actual
+        )
+    }
+
+    // Cuadro de diálogo para eliminar cuenta
+    if (deleteAccountDialogVisible) {
+        DeleteAccountDialog(
+            onClose = { deleteAccountDialogVisible = false },
+            onDeleteAccount = {
+                authManager.deleteAccount { success ->
+                    if (success) {
+                        Toast.makeText(context, "Cuenta eliminada correctamente.", Toast.LENGTH_LONG).show()
+                        onSignOut()
+                    } else {
+                        Toast.makeText(context, "Error al eliminar la cuenta.", Toast.LENGTH_LONG).show()
+                    }
+                    deleteAccountDialogVisible = false
+                }
+            }
         )
     }
 }
-
-
 
 @Composable
 fun ChangePasswordDialog(
@@ -170,44 +197,62 @@ fun ChangePasswordDialog(
     onChangePassword: (Context, String) -> Unit, // Contexto y nueva contraseña como parámetros
     currentPassword: String // Agregar la contraseña actual como un parámetro
 ) {
-    var newPassword by remember { mutableStateOf("") }
-
     val context = LocalContext.current
-
-    // Lógica para confirmar el cambio de contraseña
-    fun handleConfirm() {
-        onChangePassword(context, newPassword)
-        onClose() // Cerrar el diálogo después de confirmar
-    }
-
-    // Lógica para cancelar el cambio de contraseña
-    fun handleCancel() {
-        onClose()
-    }
 
     AlertDialog(
         onDismissRequest = onClose,
         title = { Text(text = "Cambiar Contraseña") },
         text = {
             Column {
-                // Campo de texto para ingresar la nueva contraseña
-                OutlinedTextField(
-                    value = newPassword,
-                    onValueChange = { newPassword = it },
-                    label = { Text("Nueva Contraseña") }
-                )
+                Text("¿Deseas enviar un correo para cambiar la contraseña a $currentPassword?")
             }
         },
         confirmButton = {
             Button(
-                onClick = { handleConfirm() }
+                onClick = {
+                    onChangePassword(context, currentPassword)
+                    onClose()
+                }
             ) {
                 Text("Confirmar")
             }
         },
         dismissButton = {
             Button(
-                onClick = { handleCancel() }
+                onClick = { onClose() }
+            ) {
+                Text("Cancelar")
+            }
+        }
+    )
+}
+
+@Composable
+fun DeleteAccountDialog(
+    onClose: () -> Unit,
+    onDeleteAccount: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onClose,
+        title = { Text(text = "Eliminar Cuenta") },
+        text = {
+            Column {
+                Text("¿Estás seguro de que deseas eliminar tu cuenta? Esta acción no se puede deshacer.")
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    onDeleteAccount()
+                    onClose()
+                }
+            ) {
+                Text("Confirmar")
+            }
+        },
+        dismissButton = {
+            Button(
+                onClick = { onClose() }
             ) {
                 Text("Cancelar")
             }

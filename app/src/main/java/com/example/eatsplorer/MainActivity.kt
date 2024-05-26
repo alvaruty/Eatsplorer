@@ -90,7 +90,7 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        NavHost(navController = navController, startDestination = DestinationScreen.Login.route) {
+        NavHost(navController = navController, startDestination = DestinationScreen.MainScreen.route) {
             composable(DestinationScreen.Login.route) {
                 LoginScreen(navController, analytics, authManager)
             }

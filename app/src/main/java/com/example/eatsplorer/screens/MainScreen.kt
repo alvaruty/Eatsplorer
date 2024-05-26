@@ -47,6 +47,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -61,7 +62,7 @@ import com.example.eatsplorer.utilities.RecipeViewModelFirebase
 @Composable
 fun MyScreen(viewModel: RecipeViewModelEdaman, navController: NavController, viewModelFirebase: RecipeViewModelFirebase) {
     var showRecommended by remember { mutableStateOf(true) } // Estado para controlar la visibilidad de la sección "Recomendados"
-    var selectedCategories by remember { mutableStateOf(emptyList<String>()) } // Estado para las categorías seleccionadas
+    var selectedCategory by remember { mutableStateOf<String?>(null) } // Estado para la categoría seleccionada
 
     val isLoading = viewModel.isLoading
     val recipes = viewModel.recipes
@@ -93,14 +94,15 @@ fun MyScreen(viewModel: RecipeViewModelEdaman, navController: NavController, vie
         Spacer(modifier = Modifier.height(8.dp))
 
         // Filtros de categorías
-        Categories { categories ->
-            selectedCategories = categories
-            viewModel.getRecipesByCategory(categories)
+        Categories(selectedCategory) { category ->
+            selectedCategory = if (category == selectedCategory) null else category
+            showRecommended = selectedCategory == null // Mostrar recomendaciones si no hay categoría seleccionada
+            selectedCategory?.let { viewModel.getRecipesByCategory(listOf(it)) }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Título de recomendados (mostrar solo si el campo de búsqueda está vacío)
+        // Título de recomendados (mostrar solo si el campo de búsqueda está vacío y no hay categorías seleccionadas)
         if (showRecommended) {
             Text(
                 text = "Recomendados",
@@ -117,7 +119,6 @@ fun MyScreen(viewModel: RecipeViewModelEdaman, navController: NavController, vie
                 viewModel.getRecommendedRecipes()
             }
         }
-
 
         if (isLoading) {
             // Muestra un indicador de carga
@@ -154,7 +155,6 @@ fun MyScreen(viewModel: RecipeViewModelEdaman, navController: NavController, vie
     }
 }
 
-
 @Composable
 fun SearchBar(viewModel: RecipeViewModelEdaman, onSearch: (String) -> Unit) {
     OutlinedTextField(
@@ -181,7 +181,7 @@ fun SearchBar(viewModel: RecipeViewModelEdaman, onSearch: (String) -> Unit) {
 }
 
 @Composable
-fun Categories(onCategoriesSelected: (List<String>) -> Unit) {
+fun Categories(selectedCategory: String?, onCategorySelected: (String) -> Unit) {
     val categories = listOf(
         CategoryItem("Pollo", R.drawable.pollo),
         CategoryItem("Arroz", R.drawable.arroz),
@@ -193,28 +193,25 @@ fun Categories(onCategoriesSelected: (List<String>) -> Unit) {
 
     LazyRow(modifier = Modifier.fillMaxWidth()) {
         items(categories) { category ->
-            CategoryItem(category.name, category.imageRes) { categoryName, isSelected ->
-                if (isSelected) {
-                    onCategoriesSelected(listOf(categoryName))
-                } else {
-                    onCategoriesSelected(emptyList())
-                }
-            }
+            CategoryItem(
+                name = category.name,
+                imageRes = category.imageRes,
+                isSelected = category.name == selectedCategory,
+                onCategorySelected = onCategorySelected
+            )
         }
     }
 }
 
 @Composable
-fun CategoryItem(name: String, @DrawableRes imageRes: Int, onCategorySelected: (String, Boolean) -> Unit) {
-    var isSelected by remember { mutableStateOf(false) }
-
+fun CategoryItem(name: String, @DrawableRes imageRes: Int, isSelected: Boolean, onCategorySelected: (String) -> Unit) {
     Box(
         modifier = Modifier
             .padding(8.dp)
             .width(80.dp)  // Ancho
             .height(100.dp)
             .background(
-                if (isSelected) Color.Black else Color.White,
+                if (isSelected) Color.Black else Color(android.graphics.Color.parseColor("#f7f7f9")),
                 shape = RoundedCornerShape(16.dp) // Redondear esquinas
             )
             .border(
@@ -223,8 +220,7 @@ fun CategoryItem(name: String, @DrawableRes imageRes: Int, onCategorySelected: (
                 shape = RoundedCornerShape(16.dp)
             )
             .clickable {
-                isSelected = !isSelected
-                onCategorySelected(name, isSelected)
+                onCategorySelected(name)
             },
         contentAlignment = Alignment.Center
     ) {
@@ -310,7 +306,7 @@ fun RecipeItemRecomendado(
             },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(android.graphics.Color.parseColor("#EAEAEA")),
+            containerColor = Color(android.graphics.Color.parseColor("#f7f7f9")),
         ),
     ) {
         Column(
@@ -341,6 +337,8 @@ fun RecipeItemRecomendado(
                         text = recipe.label,
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp,
+                        maxLines = 2, // Limita el número de líneas
+                        overflow = TextOverflow.Ellipsis, // Muestra puntos suspensivos si el texto es demasiado largo
                         modifier = Modifier.padding(8.dp)
                     )
 
@@ -388,7 +386,6 @@ fun RecipeItemRecomendado(
     }
 }
 
-
 @Composable
 fun IngredientItem(ingredient: String, imageUrl: String?) {
     Box(
@@ -409,7 +406,9 @@ fun IngredientItem(ingredient: String, imageUrl: String?) {
             Text(
                 text = ingredient,
                 modifier = Modifier.align(Alignment.Center),
-                fontSize = 12.sp
+                fontSize = 12.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }

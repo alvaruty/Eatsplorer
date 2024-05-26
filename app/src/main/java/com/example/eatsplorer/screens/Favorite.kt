@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.FoodBank
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -62,7 +63,11 @@ import com.example.eatsplorer.DestinationScreen
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun FavoritesScreen(navController: NavController, firestore: FirestoreManager, authManager: AuthManager) {
+fun FavoritesScreen(
+    navController: NavController,
+    firestore: FirestoreManager,
+    authManager: AuthManager
+) {
     var showAddRecipeDialog by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val uid = authManager.getCurrentUser()?.uid ?: ""
@@ -116,7 +121,11 @@ fun FavoritesScreen(navController: NavController, firestore: FirestoreManager, a
         if (recetas.isNotEmpty()) {
             LazyColumn {
                 itemsIndexed(recetas) { index, recipe ->
-                    RecipeItem(navController = navController, recipe = recipe, firestore = firestore)
+                    RecipeItem(
+                        navController = navController,
+                        recipe = recipe,
+                        firestore = firestore
+                    )
                 }
             }
             Column(
@@ -136,7 +145,11 @@ fun FavoritesScreen(navController: NavController, firestore: FirestoreManager, a
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Spacer(modifier = Modifier.height(50.dp))
-                Icon(imageVector = Icons.Default.FoodBank, contentDescription = null, modifier = Modifier.size(150.dp))
+                Icon(
+                    imageVector = Icons.Default.FoodBank,
+                    contentDescription = null,
+                    modifier = Modifier.size(150.dp)
+                )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
                     text = "No se encontraron \nRecetas",
@@ -148,7 +161,6 @@ fun FavoritesScreen(navController: NavController, firestore: FirestoreManager, a
         }
     }
 }
-
 
 
 @Composable
@@ -179,7 +191,10 @@ fun RecipeItem(navController: NavController, recipe: Recetass, firestore: Firest
             .fillMaxWidth()
             .clickable {
                 navController.navigate(DestinationScreen.RecipeDetail.createRoute(recipe.key ?: ""))
-            }
+            },
+        colors = CardDefaults.cardColors(
+            containerColor = Color(android.graphics.Color.parseColor("#f7f7f9")),
+        ),
     ) {
         Row(
             modifier = Modifier
@@ -227,7 +242,6 @@ fun RecipeItem(navController: NavController, recipe: Recetass, firestore: Firest
         }
     }
 }
-
 
 
 @Composable

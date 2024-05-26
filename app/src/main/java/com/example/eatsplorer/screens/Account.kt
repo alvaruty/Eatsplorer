@@ -84,7 +84,7 @@ fun AccountScreen(
             onClick = { changePasswordDialogVisible = true }, // Mostrar el diálogo de cambio de contraseña
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
-                Color.White
+                Color.Transparent
             ),
             contentPadding = PaddingValues(vertical = 16.dp)
         ) {
@@ -108,7 +108,7 @@ fun AccountScreen(
             },
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
-                Color.White
+                Color.Transparent
             ),
             contentPadding = PaddingValues(vertical = 16.dp)
         ) {
@@ -129,7 +129,7 @@ fun AccountScreen(
             onClick = { deleteAccountDialogVisible = true }, // Mostrar el diálogo de confirmación de eliminación de cuenta
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
-                Color.White
+                Color.Transparent
             ),
             contentPadding = PaddingValues(vertical = 16.dp)
         ) {

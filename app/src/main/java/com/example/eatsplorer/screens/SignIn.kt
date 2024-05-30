@@ -8,7 +8,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,14 +25,12 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.eatsplorer.DestinationScreen
 import com.example.eatsplorer.R
-import com.example.eatsplorer.utilities.AnalyticsManager
 import com.example.eatsplorer.utilities.AuthManager
 import com.example.eatsplorer.utilities.AuthRes
 import kotlinx.coroutines.launch
 
 @Composable
-fun RegisterScreen(navController: NavController, authManager: AuthManager, analytics: AnalyticsManager) {
-    analytics.logScreenView(screenName = DestinationScreen.SignIn.route)
+fun RegisterScreen(navController: NavController, authManager: AuthManager) {
 
     val context = LocalContext.current
     val email = remember { mutableStateOf("") }

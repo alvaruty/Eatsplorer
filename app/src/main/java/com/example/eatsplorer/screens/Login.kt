@@ -35,14 +35,13 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.eatsplorer.DestinationScreen
 import com.example.eatsplorer.R
-import com.example.eatsplorer.utilities.AnalyticsManager
 import com.example.eatsplorer.utilities.AuthManager
 import com.example.eatsplorer.utilities.AuthRes
 import kotlinx.coroutines.launch
 
 
 @Composable
-fun LoginScreen(navController: NavController, analytics: AnalyticsManager, authManager: AuthManager) {
+fun LoginScreen(navController: NavController, authManager: AuthManager) {
     val email = remember { mutableStateOf("") }
     val contraseña = remember { mutableStateOf("") }
 

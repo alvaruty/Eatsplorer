@@ -28,10 +28,13 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -72,7 +75,11 @@ fun FavoritesScreen(
     val scope = rememberCoroutineScope()
     val uid = authManager.getCurrentUser()?.uid ?: ""
 
-    val recetas by firestore.getNotesFlow().collectAsState(initial = emptyList())
+    var selectedTabIndex by remember { mutableStateOf(0) }
+    val tabs = listOf("Mis recetas", "Otras recetas")
+
+    val myRecipes by firestore.getNotesFlow().collectAsState(initial = emptyList())
+    val publishedRecipes by firestore.getPublishedRecipesFlow().collectAsState(initial = emptyList())
 
     val permissionsLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -118,53 +125,81 @@ fun FavoritesScreen(
             }
         }
     ) {
-        if (recetas.isNotEmpty()) {
-            LazyColumn {
-                itemsIndexed(recetas) { index, recipe ->
-                    RecipeItem(
-                        navController = navController,
-                        recipe = recipe,
-                        firestore = firestore
+        Column {
+            TabRow(
+                selectedTabIndex = selectedTabIndex,
+            ) {
+                tabs.forEachIndexed { index, title ->
+                    Tab(
+                        selected = selectedTabIndex == index,
+                        onClick = { selectedTabIndex = index },
+                        text = { Text(text = title) }
                     )
                 }
             }
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-            ) {
-                Spacer(modifier = Modifier.weight(1f))
-                BottomMenu(navController, selectedIcon = Icons.Default.Favorite)
+            when (selectedTabIndex) {
+                0 -> RecipeList(navController, myRecipes, firestore, allowDelete = true) // Permitir eliminación en "Mis recetas"
+                1 -> RecipeList(navController, publishedRecipes, firestore, allowDelete = false) // No permitir eliminación en "Otras recetas"
             }
-        } else {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Spacer(modifier = Modifier.height(50.dp))
-                Icon(
-                    imageVector = Icons.Default.FoodBank,
-                    contentDescription = null,
-                    modifier = Modifier.size(150.dp)
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = "No se encontraron \nRecetas",
-                    fontSize = 20.sp, textAlign = TextAlign.Center
-                )
-                Spacer(modifier = Modifier.weight(1f))
-                BottomMenu(navController, selectedIcon = Icons.Default.Favorite)
-            }
+            Spacer(modifier = Modifier.weight(1f))
+            BottomMenu(navController, selectedIcon = Icons.Default.Favorite)
         }
     }
 }
 
+@Composable
+fun RecipeList(
+    navController: NavController,
+    recetas: List<Recetass>,
+    firestore: FirestoreManager,
+    allowDelete: Boolean
+) {
+    if (recetas.isNotEmpty()) {
+        LazyColumn {
+            itemsIndexed(recetas) { index, recipe ->
+                RecipeItem(
+                    navController = navController,
+                    recipe = recipe,
+                    firestore = firestore,
+                    allowDelete = allowDelete // Pasar el valor de allowDelete a RecipeItem
+                )
+            }
+        }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+        ) {
+            Spacer(modifier = Modifier.weight(1f))
+            BottomMenu(navController, selectedIcon = Icons.Default.Favorite)
+        }
+    } else {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.height(50.dp))
+            Icon(
+                imageVector = Icons.Default.FoodBank,
+                contentDescription = null,
+                modifier = Modifier.size(150.dp)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "No se encontraron \nRecetas",
+                fontSize = 20.sp, textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            BottomMenu(navController, selectedIcon = Icons.Default.Favorite)
+        }
+    }
+}
 
 @Composable
-fun RecipeItem(navController: NavController, recipe: Recetass, firestore: FirestoreManager) {
+fun RecipeItem(navController: NavController, recipe: Recetass, firestore: FirestoreManager, allowDelete: Boolean) {
     var showDeleteRecipeDialog by remember { mutableStateOf(false) }
 
     val onDeleteRecipeConfirmed: () -> Unit = {
@@ -173,7 +208,7 @@ fun RecipeItem(navController: NavController, recipe: Recetass, firestore: Firest
         }
     }
 
-    if (showDeleteRecipeDialog) {
+    if (showDeleteRecipeDialog && allowDelete) { // Solo mostrar el diálogo si se permite la eliminación
         DeleteRecipeDialog(
             onConfirmDelete = {
                 onDeleteRecipeConfirmed()
@@ -243,7 +278,6 @@ fun RecipeItem(navController: NavController, recipe: Recetass, firestore: Firest
     }
 }
 
-
 @Composable
 fun AddRecipeDialog(
     onRecipeAdded: (Recetass, Uri?) -> Unit,
@@ -253,6 +287,7 @@ fun AddRecipeDialog(
     var name by remember { mutableStateOf("") }
     var ingredients by remember { mutableStateOf("") }
     var instructions by remember { mutableStateOf("") }
+    var isPublished by remember { mutableStateOf(false) } // Nuevo estado para isPublished
     val uid = authManager.getCurrentUser()?.uid
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
 
@@ -272,12 +307,14 @@ fun AddRecipeDialog(
                         name = name,
                         ingredients = ingredients,
                         instructions = instructions,
-                        uid = uid.toString()
+                        uid = uid.toString(),
+                        isPublished = isPublished // Asignar valor a isPublished
                     )
                     onRecipeAdded(newRecipe, selectedImageUri)
                     name = ""
                     ingredients = ""
                     instructions = ""
+                    isPublished = false
                 }
             ) {
                 Text(text = "Agregar")
@@ -325,11 +362,20 @@ fun AddRecipeDialog(
                 ) {
                     Text(text = "Seleccionar Imagen")
                 }
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(
+                        checked = isPublished,
+                        onCheckedChange = { isPublished = it }
+                    )
+                    Text(text = "Publicar receta")
+                }
             }
         }
     )
 }
-
 
 @Composable
 fun DeleteRecipeDialog(onConfirmDelete: () -> Unit, onDismiss: () -> Unit) {
@@ -353,4 +399,3 @@ fun DeleteRecipeDialog(onConfirmDelete: () -> Unit, onDismiss: () -> Unit) {
         }
     )
 }
-

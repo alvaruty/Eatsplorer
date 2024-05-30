@@ -16,7 +16,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.eatsplorer.utilities.AnalyticsManager
 import com.example.eatsplorer.utilities.AuthManager
 
 
@@ -25,7 +24,6 @@ fun AccountScreen(
     navController: NavController,
     authManager: AuthManager,
     onSignOut: () -> Unit,
-    analytics: AnalyticsManager,
 ) {
     var changePasswordDialogVisible by remember { mutableStateOf(false) }
     var deleteAccountDialogVisible by remember { mutableStateOf(false) }

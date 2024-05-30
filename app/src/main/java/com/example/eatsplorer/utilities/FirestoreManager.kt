@@ -63,6 +63,30 @@ class FirestoreManager(context: Context) {
         awaitClose { subscription.remove() }
     }
 
+    fun getPublishedRecipesFlow(): Flow<List<Recetass>> = callbackFlow {
+        val notesRef = firestore.collection("recetas")
+            .whereEqualTo("published", true)
+            .orderBy("name")
+
+        val subscription = notesRef.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                close(error)
+                return@addSnapshotListener
+            }
+
+            snapshot?.let { querySnapshot ->
+                val recetas = mutableListOf<Recetass>()
+                for (document in querySnapshot.documents) {
+                    val receta = document.toObject(Recetass::class.java)
+                    receta?.key = document.id
+                    receta?.let { recetas.add(it) }
+                }
+                trySend(recetas).isSuccess
+            }
+        }
+        awaitClose { subscription.remove() }
+    }
+
     private suspend fun uploadImage(imageUri: Uri): String {
         val ref = storage.reference.child("images/${UUID.randomUUID()}")
         val uploadTask = ref.putFile(imageUri).await()

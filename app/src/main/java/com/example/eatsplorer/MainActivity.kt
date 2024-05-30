@@ -4,7 +4,6 @@ import FirestoreManager
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,10 +29,7 @@ import com.example.eatsplorer.screens.RecipeDetailMainScreen
 import com.example.eatsplorer.screens.RecipeDetailScreen
 import com.example.eatsplorer.screens.RegisterScreen
 import com.example.eatsplorer.ui.theme.EatsplorerTheme
-import com.example.eatsplorer.utilities.AnalyticsManager
 import com.example.eatsplorer.utilities.AuthManager
-import com.example.eatsplorer.utilities.RealtimeManager
-import com.example.eatsplorer.utilities.Receta
 import com.example.eatsplorer.utilities.Recetass
 import com.example.eatsplorer.utilities.RecipeViewModelEdaman
 import com.example.eatsplorer.utilities.RecipeViewModelFirebase
@@ -74,9 +70,7 @@ class MainActivity : ComponentActivity() {
         val navController = rememberNavController()
         val recipeViewModel = remember { RecipeViewModelEdaman() }
         val recipeViewModelFirebase = remember { RecipeViewModelFirebase() }
-        val analytics: AnalyticsManager = AnalyticsManager(context)
         val authManager: AuthManager = remember { AuthManager(context) }
-        val realtimeManager: RealtimeManager = remember { RealtimeManager(context) }
         val firestore: FirestoreManager = remember { FirestoreManager(context) }
 
         val onSignOut: () -> Unit = {
@@ -92,10 +86,10 @@ class MainActivity : ComponentActivity() {
 
         NavHost(navController = navController, startDestination = DestinationScreen.Login.route) {
             composable(DestinationScreen.Login.route) {
-                LoginScreen(navController, analytics, authManager)
+                LoginScreen(navController, authManager)
             }
             composable(DestinationScreen.SignIn.route) {
-                RegisterScreen(navController, authManager, analytics)
+                RegisterScreen(navController, authManager)
             }
             composable(DestinationScreen.MainScreen.route) {
                 MyScreen(viewModel = recipeViewModel, navController, recipeViewModelFirebase)
@@ -104,7 +98,7 @@ class MainActivity : ComponentActivity() {
                 FavoritesScreen(navController, firestore, authManager)
             }
             composable(DestinationScreen.Account.route) {
-                AccountScreen(navController, authManager, onSignOut, analytics)
+                AccountScreen(navController, authManager, onSignOut)
             }
             composable(
                 route = DestinationScreen.RecipeDetail.route,

@@ -16,6 +16,12 @@ Eatsplorer es una aplicación móvil para Android diseñada para ayudar a los us
 
 ## Instalación
 
+### Descargar APK
+
+Puedes descargar la última versión de la APK de Eatsplorer desde el siguiente enlace:
+
+[Descargar Eatsplorer APK](eatsplorer.apk)
+
 ### Requisitos Previos
 
 - [Android Studio](https://developer.android.com/studio)

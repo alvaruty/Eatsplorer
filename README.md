@@ -1,6 +1,6 @@
 # Eatsplorer
 
-<img src="[https://example.com/logo.png](https://github.com/alvaruty/Eatsplorer/assets/131477177/3e1e07f5-e099-493c-a5d7-a642e49c996e)" alt="Eatsplorer Logo" width="200"/>
+<img src="https://github.com/alvaruty/Eatsplorer/assets/131477177/3e1e07f5-e099-493c-a5d7-a642e49c996e" alt="Eatsplorer Logo" width="200"/>
 
 ## Descripción
 
